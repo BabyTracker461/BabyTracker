@@ -11,6 +11,7 @@ To run the project, run `npx expo start`
 4. Set environment variable `ANDROID_HOME=~/AndroidSDK`
 5. Enable virtualization in UEFI
 6. Run `npm run android` to start the app
+
 **Note:** Performance is very mid if you don't enable Hardware Acceleration.
 
 # Welcome to your Expo app 👋

@@ -28,9 +28,20 @@ const SleepPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View>
-        <Text>Sleep</Text>
-      </View>
+        <View style={styles.functions}>
+            <View>
+                <Text>Timer</Text>
+            </View>
+            <View>
+                <Text>Manual</Text>
+            </View>
+        </View>
+        <View style={styles.notes}>
+            <Text>Notes</Text>
+        </View>
+        <View style={styles.saaveReset}>
+            <Text>Save & Reset</Text>
+        </View>
     </SafeAreaView>
   );
 };
@@ -41,6 +52,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+  },
+  functions:{
+    flex: 7,
+    justifyContent: 'center',
+
+  },
+  notes:{
+    flex: 2
+  },
+  saaveReset:{
+    flex: 1
   },
   text: {
     fontSize: 24,

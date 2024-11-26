@@ -6,7 +6,9 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "esModuleInterop": true,                // Add this line
+    "allowSyntheticDefaultImports": true   // Add this line
   },
   "include": [
     "**/*.ts",
@@ -15,3 +17,4 @@
     "expo-env.d.ts"
   ]
 }
+

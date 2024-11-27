@@ -2,7 +2,7 @@ import { View, Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Platform } from 'react-native'
 
-export default function TrendsHeader({ back }: { back?: any }) {
+export default function Header({ back }: { back?: any }) {
     const insets = useSafeAreaInsets()
 
     return (

@@ -1,17 +1,26 @@
 import { Tabs } from 'expo-router'
-import HomeHeader from '../components/home-header'
-import TrendsHeader from '../components/trends-header'
+import { Text } from 'react-native'
+
+const Icon = ({ color }: { color: string }) => {
+    return <Text style={{ color }}>i</Text>
+}
 
 export default function TabLayout() {
     return (
-        <Tabs>
+        <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
             <Tabs.Screen
                 name='index'
-                options={{ title: 'Home', header: () => <HomeHeader /> }}
+                options={{
+                    title: 'Trackers',
+                    tabBarIcon: ({ color }) => <Icon color={color} />,
+                }}
             />
             <Tabs.Screen
                 name='trends'
-                options={{ title: 'Trends', header: () => <TrendsHeader /> }}
+                options={{
+                    title: 'Trends',
+                    tabBarIcon: ({ color }) => <Icon color={color} />,
+                }}
             />
         </Tabs>
     )

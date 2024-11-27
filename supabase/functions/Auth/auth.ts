@@ -1,103 +1,108 @@
-import { Request, Response } from "express";
 import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
 
-dotenv.config({ path: "../../../.env" });
+// Define types for the parameters
+interface RegisterUserParams {
+  email: string;
+  password: string;
+  fullName: string;
+}
 
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+interface LoginUserParams {
+  email: string;
+  password: string;
+}
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Supabase credentials are missing.");
+// Initialize the Supabase client
+const SUPABASE_URL = "https://nhiqqduzovucbeexfilx.supabase.co"; // Your Supabase URL
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oaXFxZHV6b3Z1Y2JlZXhmaWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyMjc3MTksImV4cCI6MjA0NzgwMzcxOX0.z6aTL4go6uJH1-Ow5ef066WZbRE70OToaEe06SXPO48"; // Your anon key
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Supabase credentials are missing.");
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Register a new user
-export const registerUser = async (req: Request, res: Response): Promise<void> => {
+// Function to register a new user
+export const registerUser = async ({ email, password, fullName }: RegisterUserParams) => {
   try {
-    const { email, password, full_name } = req.body;
-
-    console.log("Registering user:", { email, full_name });
-
-    if (!email || !password || !full_name) {
-      res.status(400).json({ error: "Email, password, and full name are required" });
-      return;
+    if (!email || !password || !fullName) {
+      throw new Error("Email, password, and full name are required");
     }
 
+    console.log(`Registering user: ${email}, ${fullName}`);
+
     // Register the user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
     if (authError) {
-      console.error("Supabase signUp error:", authError.message);
-      res.status(400).json({ error: authError.message });
-      return;
+      console.error("Auth Error:", authError.message);
+      throw new Error(authError.message);
     }
 
     const userId = authData.user?.id;
 
     if (!userId) {
-      console.error("User ID is missing after registration");
-      res.status(500).json({ error: "Failed to retrieve user ID" });
-      return;
+      throw new Error("Failed to retrieve user ID from Supabase Auth");
     }
 
-    console.log("User successfully registered with ID:", userId);
+    console.log("User registered successfully in auth.users. ID:", userId);
 
-    // Insert into the custom user_profiles table
+    // Insert user profile into the `user_profiles` table
     const { error: profileError } = await supabase.from("user_profiles").insert([
       {
         auth_user_id: userId, // Link to the Supabase auth.users table
-        full_name, // User's full name
+        full_name: fullName, // User's full name
       },
     ]);
 
     if (profileError) {
-      console.error("Profile creation error:", profileError.message);
-      res.status(500).json({ error: "Failed to create user profile" });
-      return;
+      console.error("Profile Insertion Error:", profileError.message);
+      throw new Error("Failed to insert user profile into user_profiles");
     }
 
-    res.status(201).json({ message: "User registered successfully" });
+    console.log("User profile created successfully for ID:", userId);
+
+    return { message: "User registered successfully" };
   } catch (error) {
-    console.error("Unhandled error during registration:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error instanceof Error) {
+      console.error("Error during user registration:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during user registration:", error);
+    return { error: "An unexpected error occurred" };
   }
 };
 
-// Login a user
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
+// Function to log in a user
+export const loginUser = async ({ email, password }: LoginUserParams) => {
   try {
-    const { email, password } = req.body;
-
-    console.log("Attempting login for user:", { email });
-
     if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required" });
-      return;
+      throw new Error("Email and password are required");
     }
 
-    // Log the user in
+    console.log(`Logging in user: ${email}`);
+
+    // Log the user in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      console.error("Supabase login error:", error.message);
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
+      console.error("Auth Login Error:", error.message);
+      throw new Error("Invalid credentials");
     }
 
     const userId = data.user?.id;
 
     if (!userId) {
-      console.error("User ID is missing after login");
-      res.status(500).json({ error: "Failed to retrieve user ID" });
-      return;
+      throw new Error("Failed to retrieve user ID during login");
     }
 
-    console.log("User logged in successfully with ID:", userId);
+    console.log("User logged in successfully. ID:", userId);
 
-    // Fetch the user's profile from user_profiles table
+    // Fetch the user's profile from the `user_profiles` table
     const { data: profile, error: profileError } = await supabase
       .from("user_profiles")
       .select("*")
@@ -105,18 +110,47 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       .single();
 
     if (profileError) {
-      console.error("Profile fetch error:", profileError.message);
-      res.status(500).json({ error: "Failed to fetch user profile" });
-      return;
+      console.error("Profile Fetch Error:", profileError.message);
+      throw new Error("Failed to fetch user profile");
     }
 
-    res.status(200).json({
+    console.log("User profile fetched successfully for ID:", userId);
+
+    return {
       message: "Login successful",
-      session: data.session,
-      profile, // Return the user's profile
-    });
+      session: data.session, // Contains tokens for future API requests
+      profile, // User's profile data
+    };
   } catch (error) {
-    console.error("Unhandled error during login:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error instanceof Error) {
+      console.error("Error during login:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during login:", error);
+    return { error: "An unexpected error occurred" };
+  }
+};
+
+// Additional helper function to check user profile
+export const getUserProfile = async (authUserId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .single();
+
+    if (error) {
+      console.error("Profile Fetch Error:", error.message);
+      throw new Error("Failed to fetch user profile");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error fetching user profile:", error.message);
+      throw new Error(error.message);
+    }
+    throw new Error("An unexpected error occurred while fetching user profile");
   }
 };

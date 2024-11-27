@@ -1,121 +1,165 @@
-import express, { Request, Response, NextFunction } from "express";
-import bodyParser from "body-parser";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
-// Import authentication logic from auth.ts
-import { registerUser, loginUser } from "../Auth/auth"; 
+// Initialize Supabase client
+const SUPABASE_URL = "https://your-supabase-url.supabase.co";
+const SUPABASE_ANON_KEY = "your-anon-key"; // Use the anon/public key
 
-// Load environment variables
-dotenv.config({ path: "../../../.env" });
-
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Supabase credentials are missing.");
 }
 
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Initialize Express app
-const app = express();
-app.use(bodyParser.json());
+// Function to register a new user
+export const registerUser = async (email: string, password: string, fullName: string) => {
+  try {
+    if (!email || !password || !fullName) {
+      throw new Error("Email, password, and full name are required");
+    }
 
-// Middleware to validate JSON payloads
-const validateJSONMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.body || Object.keys(req.body).length === 0) {
-    res.status(400).json({ error: "Invalid or missing JSON payload" });
-  } else {
-    next();
+    // Register the user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+
+    if (authError) {
+      throw new Error(authError.message);
+    }
+
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      throw new Error("Failed to retrieve user ID");
+    }
+
+    // Insert user profile into the `user_profiles` table
+    const { error: profileError } = await supabase.from("user_profiles").insert([
+      {
+        auth_user_id: userId, // Link to the Supabase auth.users table
+        full_name: fullName, // User's full name
+      },
+    ]);
+
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    return { message: "User registered successfully" };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error during user registration:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during user registration:", error);
+    return { error: "An unexpected error occurred" };
   }
 };
 
-// Authentication routes
-app.post("/register", registerUser);
-app.post("/login", loginUser);
-
-// POST endpoint to add a sleep entry
-app.post(
-  "/sleep",
-  validateJSONMiddleware,
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { start_time, end_time, notes } = req.body;
-
-      // Validate required fields
-      if (!start_time || !end_time) {
-        res.status(400).json({ error: "Missing required fields: start_time and/or end_time" });
-        return;
-      }
-
-      // Calculate duration in seconds
-      const duration_seconds = Math.floor(
-        (new Date(end_time).getTime() - new Date(start_time).getTime()) / 1000
-      );
-
-      if (duration_seconds <= 0) {
-        res.status(400).json({ error: "End time must be after start time" });
-        return;
-      }
-
-      // Insert sleep data into Supabase
-      const { data, error } = await supabase
-        .from("sleep_tracker")
-        .insert([{ start_time, end_time, duration_seconds, notes }]);
-
-      if (error) {
-        console.error("Database insert error:", error.message);
-        res.status(500).json({ error: "Database error", details: error.message });
-        return;
-      }
-
-      res.status(201).json({ success: true, data });
-    } catch (error) {
-      console.error("Unhandled error:", error instanceof Error ? error.message : error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  }
-);
-
-// GET endpoint to retrieve sleep entries
-app.get("/sleep", async (req: Request, res: Response): Promise<void> => {
+// Function to log in a user
+export const loginUser = async (email: string, password: string) => {
   try {
-    const { start_date, end_date } = req.query;
+    if (!email || !password) {
+      throw new Error("Email and password are required");
+    }
 
-    // Build query for Supabase
+    // Log the user in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw new Error("Invalid credentials");
+    }
+
+    const userId = data.user?.id;
+
+    if (!userId) {
+      throw new Error("Failed to retrieve user ID");
+    }
+
+    // Fetch the user's profile from the `user_profiles` table
+    const { data: profile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("auth_user_id", userId)
+      .single();
+
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    return {
+      message: "Login successful",
+      session: data.session, // Contains tokens for future API requests
+      profile, // User's profile data
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error during login:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during login:", error);
+    return { error: "An unexpected error occurred" };
+  }
+};
+
+// Function to add a sleep entry
+export const addSleepEntry = async (startTime: string, endTime: string, notes: string) => {
+  try {
+    if (!startTime || !endTime) {
+      throw new Error("Start time and end time are required");
+    }
+
+    // Calculate duration in seconds
+    const durationSeconds = Math.floor(
+      (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+    );
+
+    if (durationSeconds <= 0) {
+      throw new Error("End time must be after start time");
+    }
+
+    // Insert sleep data into Supabase
+    const { data, error } = await supabase
+      .from("sleep_tracker")
+      .insert([{ start_time: startTime, end_time: endTime, duration_seconds: durationSeconds, notes }]);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { message: "Sleep entry added successfully", data };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Error during adding sleep entry:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during adding sleep entry:", error);
+    return { error: "An unexpected error occurred" };
+  }
+};
+
+// Function to fetch sleep entries
+export const fetchSleepEntries = async (startDate?: string, endDate?: string) => {
+  try {
     let query = supabase.from("sleep_tracker").select("*");
 
-    if (start_date) {
-      query = query.gte("start_time", new Date(start_date as string).toISOString());
+    if (startDate) {
+      query = query.gte("start_time", new Date(startDate).toISOString());
     }
-    if (end_date) {
-      query = query.lte("end_time", new Date(end_date as string).toISOString());
+    if (endDate) {
+      query = query.lte("end_time", new Date(endDate).toISOString());
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error("Database query error:", error.message);
-      res.status(500).json({ error: "Database error", details: error.message });
-      return;
+      throw new Error(error.message);
     }
 
-    res.status(200).json({ success: true, data });
+    return { data };
   } catch (error) {
-    console.error("Unhandled error:", error instanceof Error ? error.message : error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error instanceof Error) {
+      console.error("Error during fetching sleep entries:", error.message);
+      return { error: error.message };
+    }
+    console.error("Unknown error during fetching sleep entries:", error);
+    return { error: "An unexpected error occurred" };
   }
-});
-
-// Catch-all route for unsupported methods
-app.use((req: Request, res: Response) => {
-  res.status(405).json({ error: "Method not allowed" });
-});
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
+};

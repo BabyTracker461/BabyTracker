@@ -30,7 +30,7 @@ export default function Header() {
                 >
                     {defaultTitle}
                 </Text>
-                <View className='flex-row border-black border-2 gap-1 rounded-full items-center pr-2'>
+                <View className='flex-row border-black border-2 gap-1 rounded-full items-center justify-center pr-2'>
                     <Text className='aspect-square p-2'>👩</Text>
                     <Text>Profile</Text>
                 </View>

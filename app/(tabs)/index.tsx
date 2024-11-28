@@ -1,7 +1,13 @@
 import React from 'react'
 import { Link, Stack } from 'expo-router'
-import Header from '../components/header'
+import {
+    headerLeftTitle,
+    headerRightTitle,
+} from '@/app/components/header-titles'
 import { View, Text, Platform } from 'react-native'
+
+const leftHeaderText = '👶 Tracker'
+const rightHeaderText = { icon: '👩', text: 'Profile' }
 
 export default function Tab() {
     type Button = {
@@ -21,18 +27,25 @@ export default function Tab() {
         <>
             <Stack.Screen
                 options={{
-                    header: () => <Header />,
+                    headerLeft: () => headerLeftTitle(leftHeaderText),
+                    headerRight: () =>
+                        headerRightTitle(
+                            rightHeaderText.icon,
+                            rightHeaderText.text,
+                        ),
+                    headerTitle: '',
+                    headerShadowVisible: false,
                 }}
             />
             <View className='flex-row flex-wrap h-full justify-center align-center pt-20 gap-4 bg-white'>
                 {buttons.map((button, key) => (
-                    <Link href={button.link} key={key}>
+                    <Link href={button.link} className='group' key={key}>
                         <View
-                            className='border-4 w-52 h-52 rounded-[40] items-center justify-center bg-white' // items-center is x, justify-center is y
+                            className='group-active:bg-blue-50 group-active:border-gray-300 border-4 w-52 h-52 rounded-[40] items-center justify-center bg-white' // items-center is x, justify-center is y
                         >
                             <Text className='text-7xl p-4'>{button.icon}</Text>
                             <Text
-                                className='text-black'
+                                className='text-black group-active:text-gray-400'
                                 style={{
                                     fontFamily: Platform.select({
                                         android: 'Figtree_700ExtraBold',

@@ -8,7 +8,11 @@ export default function Layout() {
     if (loadFonts() == 1) return null
     return (
         <>
-            <StatusBar backgroundColor='auto' style='dark' />
+            <StatusBar
+                backgroundColor='auto'
+                hideTransitionAnimation='none'
+                style='dark'
+            />
             <Stack
                 screenOptions={{
                     headerBackButtonDisplayMode: 'minimal',
@@ -20,6 +24,18 @@ export default function Layout() {
                         headerShown: false,
                     }}
                 />
+                {/*<Stack.Screen
+                    name='profile'
+                    options={{
+                        presentation: 'containedModal',
+                    }}
+                />
+                <Stack.Screen
+                    name='calendar'
+                    options={{
+                        presentation: 'modal',
+                    }}
+                />*/}
             </Stack>
         </>
     )

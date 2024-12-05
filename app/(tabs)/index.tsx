@@ -7,7 +7,7 @@ import {
 import { View, Text, Platform } from 'react-native'
 
 const leftHeaderText = '👶 Tracker'
-const rightHeaderText = { icon: '👩', text: 'Profile' }
+const rightHeaderText = { icon: '👩', text: 'Profile', link: '/profile' as any }
 
 export default function Tab() {
     type Button = {
@@ -32,6 +32,7 @@ export default function Tab() {
                         headerRightTitle(
                             rightHeaderText.icon,
                             rightHeaderText.text,
+                            rightHeaderText.link,
                         ),
                     headerTitle: '',
                     headerShadowVisible: false,

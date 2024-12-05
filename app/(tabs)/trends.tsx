@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router'
+import { ExternalPathString, Stack } from 'expo-router'
 import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
 import {
@@ -6,8 +6,12 @@ import {
     headerRightTitle,
 } from '@/app/components/header-titles'
 
-const rightHeaderText = { icon: '📅', text: 'Calendar' }
-const leftHeaderText = '📈 Trends'
+const rightHeaderText = {
+    icon: '📅',
+    text: 'Calendar',
+    link: '/calendar' as ExternalPathString,
+}
+const leftHeaderText = '📈 Logs'
 
 export default function Tab() {
     return (
@@ -19,12 +23,13 @@ export default function Tab() {
                         headerRightTitle(
                             rightHeaderText.icon,
                             rightHeaderText.text,
+                            rightHeaderText.link,
                         ),
                     headerTitle: '',
                 }}
             />
             <View style={styles.container}>
-                <Text>Tab [Home|Settings]</Text>
+                <Text>Coming soon</Text>
             </View>
         </>
     )

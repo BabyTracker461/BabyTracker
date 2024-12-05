@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-.text {
-    color: blue;
+.figtree {
+    font-family: 'Figtree';
+}
+
+.box-container {
+    @apply bg-gray-100 mb-4 flex-col items-center pt-20 pb-20 gap-10 rounded-3xl border-2 border-gray-300 justify-center;
+}
+
+.button {
+    @apply rounded-full pt-3 pb-3 pr-6 pl-6 mr-1 ml-1 border-[1px];
+}
+
+.button:active {
+    @apply bg-gray-300;
+}
+
+.subheading {
+    @apply figtree text-3xl mt-2 mb-4;
+    font-weight: bold;
+}
+
+.input-label {
+    @apply text-3xl figtree;
+}
+
+.input {
+    @apply input-label bg-gray-100 focus:bg-gray-300 p-4 rounded-lg;
+}
+
+.note {
+    @apply bg-blue-100 rounded-3xl align-middle items-center p-3 pb-4 text-wrap max-h-[175px];
 }

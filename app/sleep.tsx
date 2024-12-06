@@ -8,7 +8,7 @@ import {
     TouchableWithoutFeedback,
 } from 'react-native'
 import React, { useRef, useState } from 'react'
-import { Stack } from 'expo-router'
+import { Stack, useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import supabase from './lib/supabase-client'
 
@@ -23,7 +23,7 @@ export interface SleepLog {
 
 export default function Sleep() {
     const insets = useSafeAreaInsets()
-
+    const navigation = useNavigation()
     const [hours, setHours] = useState<string>('')
     const [minutes, setMinutes] = useState<string>('')
     const [note, setNotes] = useState<string>('')
@@ -55,8 +55,9 @@ export default function Sleep() {
             if (error) {
                 console.error('Error adding sleep log:', error.message)
             } else {
-                console.log('Sleep log added')
+                alert('Sleep log added')
                 clear()
+                navigation.goBack()
             }
         } catch (error) {
             console.error('Unknown error:', error)

@@ -3,7 +3,6 @@ import {
     Platform,
     View,
     Pressable,
-    TextInput,
     Keyboard,
     TouchableWithoutFeedback,
 } from 'react-native'

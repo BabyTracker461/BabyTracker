@@ -4,3 +4,8 @@
     - has bars of different tracking trends with a mini graph
     - click on any to expand into it's own page
 [] fix keyboard offset when typing in stuff
+[] remove animation / fade when timer is changing
+[] store timer state variables in local storage so they persist when navigated away
+[] store current time as object vs 1h or 1m string as we want it as numbers:
+    - goes in hand with unifying sleep times
+[] design log page layout

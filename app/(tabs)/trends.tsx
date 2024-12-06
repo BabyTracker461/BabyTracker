@@ -1,5 +1,5 @@
-import { ExternalPathString, Stack } from 'expo-router'
-import { View, Text, StyleSheet } from 'react-native'
+import { ExternalPathString, Link, Stack } from 'expo-router'
+import { View, Text, Platform } from 'react-native'
 import React from 'react'
 import {
     headerLeftTitle,
@@ -13,7 +13,22 @@ const rightHeaderText = {
 }
 const leftHeaderText = '📈 Logs'
 
+type Button = {
+    label: string
+    icon: string
+    link: any
+}
+
 export default function Tab() {
+    const bars: Button[] = [
+        { label: 'Sleep', icon: '🌙', link: '/sleep-log' },
+        { label: 'Pump', icon: '🍼', link: '/pump' },
+        { label: 'Milestone', icon: '🌟', link: '/milestone' },
+        { label: 'Feeding', icon: '🍽️', link: '/feeding' },
+        { label: 'Diaper', icon: '🧷', link: '/diaper' },
+        { label: 'Growth', icon: '👶', link: '/growth' },
+    ]
+
     return (
         <>
             <Stack.Screen
@@ -28,17 +43,23 @@ export default function Tab() {
                     headerTitle: '',
                 }}
             />
-            <View style={styles.container}>
-                <Text>Coming soon</Text>
+            <View className='flex-col h-full justify-center gap-4 bg-white pr-4 pl-4'>
+                {bars.map((bars, key) => (
+                    <Link href={bars.link} className='group' key={key}>
+                        <View className='flex-row justify-between group-active:bg-blue-50 group-active:border-gray-300 border-[3px] w-full rounded-[20] bg-white p-4'>
+                            <View className='flex-col justify-center items-center'>
+                                <Text className='text-2xl'>{bars.icon}</Text>
+                                <Text className='text-black figtree font-bold group-active:text-gray-400 text-xl'>
+                                    {bars.label}
+                                </Text>
+                            </View>
+                            <View>
+                                <Text>num logs, graph</Text>
+                            </View>
+                        </View>
+                    </Link>
+                ))}
             </View>
         </>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-})

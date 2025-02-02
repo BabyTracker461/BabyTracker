@@ -1,23 +1,23 @@
 import {
     Text,
-    Platform,
     View,
     Pressable,
     TextInput,
     Keyboard,
     TouchableWithoutFeedback,
 } from 'react-native';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Stack, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import supabase from './lib/supabase-client';
+import { encryptData, decryptData } from './lib/cryptoUtils';
 
 export interface DiaperLog {
-    id: number; // Unique identifier
-    type: string; // "wet", "dry", or "both"
-    rash: boolean; // Diaper rash present or not
-    note?: string; // Optional notes about the diaper change
-    loggedAt: string; // Timestamp when the log was created
+    id: number;
+    type: string;
+    rash: boolean;
+    note?: string;
+    loggedAt: string;
 }
 
 export default function Diaper() {
@@ -38,22 +38,44 @@ export default function Diaper() {
         const newLog = {
             type: diaperType,
             rash: rash === true,
-            note: note,
+            note: note || "",
             logged_at: loggedAt,
         };
 
         try {
-            const { error } = await supabase.from('diaper_log').insert([newLog]);
+            console.log("📝 Preparing to encrypt data:", newLog);
+
+            // Encrypt each field separately before storing it
+            const encryptedType = await encryptData(newLog.type);
+            const encryptedRash = await encryptData(newLog.rash.toString());
+            const encryptedNote = await encryptData(newLog.note);
+            const encryptedLoggedAt = await encryptData(newLog.logged_at);
+
+            console.log("🔒 Encrypted Data:", {
+                type: encryptedType,
+                rash: encryptedRash,
+                note: encryptedNote,
+                logged_at: encryptedLoggedAt,
+            });
+
+            // Store encrypted values in the existing columns
+            const { error } = await supabase.from('diaper_log').insert([{
+                type: encryptedType,
+                rash: encryptedRash,
+                note: encryptedNote,
+                logged_at: encryptedLoggedAt,
+            }]);
 
             if (error) {
-                console.error('Error adding diaper log:', error.message);
+                console.error("❌ Supabase Error:", error.message);
             } else {
-                alert('Diaper log added');
+                console.log("✅ Diaper log added securely!");
+                alert("Diaper log added securely");
                 clear();
                 navigation.goBack();
             }
         } catch (error) {
-            console.error('Unknown error:', error);
+            console.error("❌ Unknown error in handleAddEntry:", error);
         }
     };
 
@@ -66,98 +88,59 @@ export default function Diaper() {
             <Stack.Screen
                 options={{
                     headerTitle: 'Diaper Tracker 🍼',
-                    headerTitleStyle: {
-                        fontFamily: Platform.select({
-                            android: 'Figtree-700ExtraBold',
-                            ios: 'Figtree-ExtraBold',
-                        }),
-                    },
-                    contentStyle: {
-                        backgroundColor: 'white',
-                    },
+                    headerTitleStyle: { fontWeight: 'bold' },
+                    contentStyle: { backgroundColor: 'white' },
                 }}
             />
-            <TouchableWithoutFeedback
-                onPress={globalFeedbackUpdate}
-                accessible={false}
-            >
-                <View className="flex-col justify-between h-full">
-                    <View className="pt-4 pr-8 pl-8">
-                        {/* Diaper Type Selection */}
-                        <Text className="subheading">Select Diaper Type</Text>
-                        <View className="flex-row gap-4">
+            <TouchableWithoutFeedback onPress={globalFeedbackUpdate} accessible={false}>
+                <View className="flex-1 bg-white p-4">
+                    <Text className="text-lg font-bold mb-4">Select Diaper Type</Text>
+                    <View className="flex-row justify-between mb-4">
+                        {['wet', 'dry', 'both'].map((type) => (
                             <Pressable
-                                onPress={() => setDiaperType('wet')}
-                                className={`button ${diaperType === 'wet' ? 'bg-blue-200' : ''}`}
+                                key={type}
+                                onPress={() => setDiaperType(type)}
+                                className={`py-2 px-4 rounded-full ${diaperType === type ? 'bg-blue-500' : 'bg-gray-200'}`}
                             >
-                                <Text className="text-xl figtree">Wet</Text>
+                                <Text className={`${diaperType === type ? 'text-white' : 'text-gray-700'}`}>{type}</Text>
                             </Pressable>
-                            <Pressable
-                                onPress={() => setDiaperType('dry')}
-                                className={`button ${diaperType === 'dry' ? 'bg-yellow-200' : ''}`}
-                            >
-                                <Text className="text-xl figtree">Dry</Text>
-                            </Pressable>
-                            <Pressable
-                                onPress={() => setDiaperType('both')}
-                                className={`button ${diaperType === 'both' ? 'bg-green-200' : ''}`}
-                            >
-                                <Text className="text-xl figtree">Both</Text>
-                            </Pressable>
-                        </View>
-
-                        {/* Spacer to push sections further down */}
-                        <View style={{ flexGrow: 1 }} />
-
-                        {/* Rash Section */}
-                        <Text className="subheading">Diaper Rash?</Text>
-                        <View className="flex-row gap-4">
-                            <Pressable
-                                onPress={() => setRash(true)}
-                                className={`button ${rash === true ? 'bg-red-200' : ''}`}
-                            >
-                                <Text className="text-xl figtree">Yes</Text>
-                            </Pressable>
-                            <Pressable
-                                onPress={() => setRash(false)}
-                                className={`button ${rash === false ? 'bg-blue-200' : ''}`}
-                            >
-                                <Text className="text-xl figtree">No</Text>
-                            </Pressable>
-                        </View>
-
-                        {/* Note Section */}
-                        <View className="note" style={{ marginTop: 20 }}>
-                            <TextInput
-                                placeholder="+ Add a note"
-                                className="text-xl p-1 figtree w-full"
-                                keyboardType="default"
-                                value={note}
-                                onChangeText={setNotes}
-                                placeholderTextColor={'#000'}
-                                multiline={true}
-                                maxLength={200}
-                            />
-                        </View>
+                        ))}
                     </View>
-                    <View
-                        className="justify-end pt-4 pr-8 pl-8"
-                        style={{ paddingBottom: insets.bottom }}
-                    >
-                        <View className="flex-row justify-between">
-                            <Pressable
-                                onPress={handleAddEntry}
-                                className="button"
-                            >
-                                <Text className="text-xl figtree">Add</Text>
-                            </Pressable>
-                            <Pressable
-                                onPress={clear}
-                                className="button bg-orange-100"
-                            >
-                                <Text className="text-xl figtree">Clear</Text>
-                            </Pressable>
-                        </View>
+
+                    <Text className="text-lg font-bold mb-4">Diaper Rash?</Text>
+                    <View className="flex-row justify-between mb-4">
+                        <Pressable
+                            onPress={() => setRash(true)}
+                            className={`py-2 px-4 rounded-full ${rash === true ? 'bg-red-500' : 'bg-gray-200'}`}
+                        >
+                            <Text className={`${rash === true ? 'text-white' : 'text-gray-700'}`}>Yes</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => setRash(false)}
+                            className={`py-2 px-4 rounded-full ${rash === false ? 'bg-green-500' : 'bg-gray-200'}`}
+                        >
+                            <Text className={`${rash === false ? 'text-white' : 'text-gray-700'}`}>No</Text>
+                        </Pressable>
+                    </View>
+
+                    <TextInput
+                        placeholder="+ Add a note"
+                        className="border border-gray-300 rounded-lg p-2 mb-6"
+                        keyboardType="default"
+                        value={note}
+                        onChangeText={setNotes}
+                        placeholderTextColor={'#666'}
+                        multiline
+                        maxLength={200}
+                    />
+
+                    <View className="flex-row justify-between">
+                        <Pressable onPress={handleAddEntry} className="bg-blue-500 py-3 px-4 rounded-lg">
+                            <Text className="text-white text-center font-bold">Add</Text>
+                        </Pressable>
+                        <Pressable onPress={clear} className="bg-gray-300 py-3 px-4 rounded-lg">
+                            <Text className="text-gray-700 text-center font-bold">Clear</Text>
+                        </Pressable>
                     </View>
                 </View>
             </TouchableWithoutFeedback>

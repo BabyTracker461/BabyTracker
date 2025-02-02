@@ -1,20 +1,28 @@
-import React from 'react'
-import { Link, Stack } from 'expo-router'
-import {
-    headerLeftTitle,
-    headerRightTitle,
-} from '@/app/components/header-titles'
-import { View, Text, Platform } from 'react-native'
+import React, { useEffect } from 'react';
+import { Link, Stack } from 'expo-router';
+import { headerLeftTitle, headerRightTitle } from '@/app/components/header-titles';
+import { View, Text, Platform } from 'react-native';
+import { storeEncryptionKey, getEncryptionKey } from '../lib/secureStorage';
 
-const leftHeaderText = '👶 Tracker'
-const rightHeaderText = { icon: '👩', text: 'Profile', link: '/profile' as any }
+const leftHeaderText = '👶 Tracker';
+const rightHeaderText = { icon: '👩', text: 'Profile', link: '/profile' as any };
 
 export default function Tab() {
+    useEffect(() => {
+        const testSecureStore = async () => {
+            await storeEncryptionKey(); // Ensure encryption key exists
+            const key = await getEncryptionKey(); // Retrieve it
+            console.log("🚀 SecureStore Test Key:", key);
+        };
+
+        testSecureStore();
+    }, []);
+
     type Button = {
-        label: string
-        icon: string
-        link: any
-    }
+        label: string;
+        icon: string;
+        link: any;
+    };
     const buttons: Button[] = [
         { label: 'Sleep', icon: '🌙', link: '/sleep' },
         { label: 'Pump', icon: '🍼', link: '/pump' },
@@ -22,7 +30,7 @@ export default function Tab() {
         { label: 'Feeding', icon: '🍽️', link: '/feeding' },
         { label: 'Diaper', icon: '🧷', link: '/diaper' },
         { label: 'Growth', icon: '👶', link: '/growth' },
-    ]
+    ];
     return (
         <>
             <Stack.Screen
@@ -62,5 +70,6 @@ export default function Tab() {
                 ))}
             </View>
         </>
-    )
+    );
 }
+

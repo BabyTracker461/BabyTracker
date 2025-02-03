@@ -26,7 +26,7 @@ export default function Tab() {
         { label: 'Milestone', icon: '🌟', link: '/milestone' },
         { label: 'Feeding', icon: '🍽️', link: '/feeding' },
         { label: 'Diaper', icon: '🧷', link: '/diaper' },
-        { label: 'Growth', icon: '👶', link: '/growth' },
+        { label: 'Growth', icon: '👶', link: '/growth-log' },
     ]
 
     return (

@@ -40,7 +40,7 @@ export default function GrowthLogs(){
             let query = supabase
                 .from('growth_log')
                 .select(selectedColumns.join(','))
-                .order('logged_at', { ascending: false });
+                .order('logged_at', { ascending: true });
             const { data, error } = await query;
 
             console.log('Data:', data); // Log the response data
@@ -72,7 +72,6 @@ export default function GrowthLogs(){
         fetchLogs(); // Call fetchLogs when the component mounts
     }, []);
 
-
     return(
         <View className='box-container'>
             <View className='flex-col gap-5'>
@@ -80,40 +79,60 @@ export default function GrowthLogs(){
                 <View style={{ marginTop: 20 }}>
                 <View>
                     {growthLogs.length > 0 && (
-                        <LineChart
-                            data={{
-                                labels: growthLogs.map(log => log.logged_at), // X-axis (dates)
-                                datasets: [
-                                    filterHeight && {
-                                        data: growthLogs.map(log => log.height),
-                                        color: () => 'blue',
-                                        strokeWidth: 2,
-                                    },
-                                    filterWeight && {
-                                        data: growthLogs.map(log => log.weight),
-                                        color: () => 'green',
-                                        strokeWidth: 2,
-                                    },
-                                    filterHeadC && {
-                                        data: growthLogs.map(log => log.headC),
-                                        color: () => 'red',
-                                        strokeWidth: 2,
-                                    },
-                                ].filter(Boolean), // Remove null values
-                            }}
-                            width={Dimensions.get('window').width - 40} // Graph width
-                            height={220}
-                            yAxisLabel=""
-                            chartConfig={{
-                                backgroundColor: "#fff",
-                                backgroundGradientFrom: "#fff",
-                                backgroundGradientTo: "#fff",
-                                decimalPlaces: 1,
-                                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                                style: { borderRadius: 16 },
-                            }}
-                            style={{ marginVertical: 8, borderRadius: 16 }}
-                        />
+                        <View>
+                            <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+                                    {filterHeight ? 'Change in Height' : filterWeight ? 'Change in Weight' : 'Change In Head Circumfrence'}
+                                </Text>
+                            </View>
+
+                            <LineChart
+                                data={{
+                                    labels: growthLogs.map(log => {
+                                        const date = new Date(log.logged_at);
+                                        return `${date.getMonth() + 1}/${date.getDate()}`; // MM/DD format
+                                    }), // X-axis (dates)
+                                    datasets: [
+                                        filterHeight && {
+                                            data: growthLogs.map(log => log.height),
+                                            color: () => 'blue',
+                                            strokeWidth: 2,
+                                        },
+                                        filterWeight && {
+                                            data: growthLogs.map(log => log.weight),
+                                            color: () => 'green',
+                                            strokeWidth: 2,
+                                        },
+                                        filterHeadC && {
+                                            data: growthLogs.map(log => log.headC),
+                                            color: () => 'red',
+                                            strokeWidth: 2,
+                                        },
+                                    ].filter(Boolean), // Remove null values
+                                }}
+                                width={Dimensions.get('window').width - 40} // Graph width
+                                height={300}
+                                yAxisSuffix={filterHeight ? " in" : filterWeight ? " lb" : " in"}
+                                chartConfig={{
+                                    backgroundColor: "#fff",
+                                    backgroundGradientFrom: "#fff",
+                                    backgroundGradientTo: "#fff",
+                                    decimalPlaces: 2,
+                                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                                    style: { borderRadius: 16 },
+                                    fillShadowGradient: 'transparent', 
+                                    fillShadowGradientFrom: 'transparent',
+                                    fillShadowGradientTo: 'transparent',
+                                    fillShadowGradientOpacity: '0',
+                                    propsForDots: {
+                                        r: "4",
+                                        strokeWidth: "2",
+                                        stroke: "#000"
+                                    }
+                                }}
+                                style={{ marginVertical: 8, borderRadius: 16 }}
+                            />
+                        </View>
                     )}
                 </View>
 
@@ -149,7 +168,18 @@ export default function GrowthLogs(){
                     <Text style={{ color: filterHeadC ? 'blue' : 'black' }}>HeadC</Text>
                 </Pressable>
             </View>
+            <View>
+            <Pressable
+                    className='button'
+                    onPress={() => {
+                    
+                    }}>
+                    <Text style={{ color: filterHeadC ? 'blue' : 'black' }}>Edit Entry</Text>
+                </Pressable>
+            </View>
         </View>
         
     )
+   
 }
+

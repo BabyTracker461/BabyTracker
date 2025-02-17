@@ -2,35 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-.figtree {
-    font-family: 'Figtree';
+/* variables */
+/* :root {
+    --color-primary: #000000;
+    --color-secondary: #ffffff;
+    --color-accent: #f97316;
+} */
+
+.subtitle {
+    @apply text-xl mb-1 scale-100 dark:text-gray-400;
 }
 
-.box-container {
-    @apply bg-gray-100 mb-4 flex-col items-center pt-20 pb-20 gap-10 rounded-3xl border-2 border-gray-300 justify-center;
-}
-
-.button {
-    @apply rounded-full pt-3 pb-3 pr-6 pl-6 mr-1 ml-1 border-[1px];
-}
-
-.button:active {
-    @apply bg-gray-300;
+.heading {
+    @apply text-5xl mb-2 scale-100 font-bold dark:text-white;
 }
 
 .subheading {
-    @apply figtree text-3xl mt-2 mb-4;
-    font-weight: bold;
+    @apply text-3xl m-1 scale-100 dark:text-gray-200;
 }
 
-.input-label {
-    @apply text-3xl figtree;
+.main-container {
+    @apply p-4 dark:bg-[#0b2218] bg-[#fff5e4] h-full w-full transition-colors;
 }
 
-.input {
-    @apply input-label bg-gray-100 focus:bg-gray-300 p-4 rounded-lg;
+.button {
+    @apply rounded-full p-5 border-[1px] shadow-sm;
 }
 
-.note {
-    @apply bg-blue-100 rounded-3xl align-middle items-center p-3 pb-4 text-wrap max-h-[175px];
+.button-red {
+    @apply dark:border-gray-600 bg-red-800 dark:bg-red-500 border-red-600 dark:shadow-red-600;
+}
+
+.button-normal {
+    @apply bg-[#2e5a4c] border-gray-600 dark:shadow-white dark:bg-[#bbdaf8] dark:border-gray-200;
+}
+
+.button-text {
+    @apply text-base text-white text-center dark:text-gray-700;
+}
+
+.text {
+    @apply text-base text-gray-700 dark:text-gray-300;
+}
+
+.text-input {
+    @apply border-2 dark:text-white border-gray-700 rounded-xl p-4 scale-100 focus:border-[#549461] dark:border-gray-300
+    placeholder:text-gray-600 dark:focus:border-blue-300;
+}
+
+.transition-padding {
+    transition-property: padding-bottom;
+    transition-timing-function: linear;
+    transition-duration: 100ms;
+    transition-delay: 10ms;
+}
+
+.tracker-button {
+    @apply bg-[#fff6c9] dark:bg-[#466755] flex-col items-center justify-center p-4 gap-2 aspect-square rounded-[2rem] border-2 border-[#c4b798]
+    dark:border-[#152619] ios:drop-shadow-sm android:shadow-md;
+}
+
+.tracker-label {
+    @apply text-lg scale-100 font-bold text-yellow-800 dark:text-[#dbf9dd];
+}
+
+.tracker-icon {
+    @apply text-[4.5rem] scale-100;
 }

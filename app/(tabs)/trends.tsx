@@ -1,10 +1,7 @@
 import { ExternalPathString, Link, Stack } from 'expo-router'
 import { View, Text, Platform } from 'react-native'
 import React from 'react'
-import {
-    headerLeftTitle,
-    headerRightTitle,
-} from '@/app/components/header-titles'
+import { headerLeftTitle, headerRightTitle } from '@/components/header-titles'
 
 const rightHeaderText = {
     icon: '📅',
@@ -19,7 +16,7 @@ type Button = {
     link: any
 }
 
-export default function Tab() {
+export default function LogTab() {
     const bars: Button[] = [
         { label: 'Sleep', icon: '🌙', link: '/sleep-log' },
         { label: 'Pump', icon: '🍼', link: '/pump' },

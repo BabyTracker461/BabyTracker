@@ -4,6 +4,10 @@ export type BreastSide = 'left' | 'right' | 'both';
 
 export type MilkType = 'breast milk' | 'formula';
 
+export type VolumeUnit = 'oz' | 'mL';
+
+export type SolidFoodUnit = 'tbsp' | 'tsp' | 'grams' | 'oz' | 'cups';
+
 export interface FeedingEntry {
   id: string;
   type: FeedingType;
@@ -15,11 +19,11 @@ export interface FeedingEntry {
   // For bottle feeding
   milkType?: MilkType;
   volume?: number;
-  volumeUnit?: 'oz' | 'mL';
+  volumeUnit?: VolumeUnit;
   // For solid foods
   foodName?: string;
   quantity?: number;
-  quantityUnit?: 'tbsp' | 'grams';
+  quantityUnit?: SolidFoodUnit;
   // Common fields
   notes?: string;
   childId: string;

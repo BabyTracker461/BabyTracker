@@ -11,7 +11,7 @@ import {
     Button,
 } from 'react-native';
 import { useFeeding } from './context/FeedingContext';
-import { FeedingType, BreastSide, MilkType } from './types/feeding';
+import { FeedingType, BreastSide, MilkType, VolumeUnit, SolidFoodUnit } from './types/feeding';
 import { Link } from 'expo-router';
 
 const FeedingScreen = () => {
@@ -21,7 +21,10 @@ const FeedingScreen = () => {
     const [duration, setDuration] = useState('');
     const [milkType, setMilkType] = useState<MilkType>('breast milk');
     const [volume, setVolume] = useState('');
-    const [volumeUnit, setVolumeUnit] = useState<'oz' | 'mL'>('oz');
+    const [volumeUnit, setVolumeUnit] = useState<VolumeUnit>('oz');
+    const [foodName, setFoodName] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [quantityUnit, setQuantityUnit] = useState<SolidFoodUnit>('tbsp');
     const [notes, setNotes] = useState('');
 
     const handleSubmit = async () => {
@@ -35,6 +38,9 @@ const FeedingScreen = () => {
             milkType: feedingType === 'bottle' ? milkType : undefined,
             volume: feedingType === 'bottle' ? Number(volume) : undefined,
             volumeUnit: feedingType === 'bottle' ? volumeUnit : undefined,
+            foodName: feedingType === 'solid' ? foodName : undefined,
+            quantity: feedingType === 'solid' ? Number(quantity) : undefined,
+            quantityUnit: feedingType === 'solid' ? quantityUnit : undefined,
             notes,
             childId: '1', // TODO: Replace with actual child ID
         });
@@ -42,6 +48,8 @@ const FeedingScreen = () => {
         // Reset form
         setDuration('');
         setVolume('');
+        setFoodName('');
+        setQuantity('');
         setNotes('');
     };
 
@@ -143,6 +151,38 @@ const FeedingScreen = () => {
                                 className="py-2 px-4 bg-gray-200 rounded-lg"
                             >
                                 <Text>{volumeUnit}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
+                {feedingType === 'solid' && (
+                    <View className="mb-6">
+                        <Text className="text-lg font-bold mb-4">Solid Food Details</Text>
+                        <TextInput
+                            className="border border-gray-300 rounded-lg p-2 mb-4"
+                            placeholder="Food Name"
+                            value={foodName}
+                            onChangeText={setFoodName}
+                        />
+                        <View className="flex-row items-center mb-4">
+                            <TextInput
+                                className="flex-1 border border-gray-300 rounded-lg p-2 mr-2"
+                                placeholder="Quantity"
+                                value={quantity}
+                                onChangeText={setQuantity}
+                                keyboardType="numeric"
+                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    const units: SolidFoodUnit[] = ['tbsp', 'tsp', 'grams', 'oz', 'cups'];
+                                    const currentIndex = units.indexOf(quantityUnit);
+                                    const nextIndex = (currentIndex + 1) % units.length;
+                                    setQuantityUnit(units[nextIndex]);
+                                }}
+                                className="py-2 px-4 bg-gray-200 rounded-lg"
+                            >
+                                <Text>{quantityUnit}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

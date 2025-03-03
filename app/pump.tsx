@@ -9,8 +9,8 @@ import {
     Modal,
     Button
 } from 'react-native'
-import React, { useRef, useState } from 'react'
-import { Stack, useNavigation } from 'expo-router'
+import React, { useRef, useState, useEffect } from 'react'
+import { Stack, useNavigation, Link } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import supabase from './lib/supabase-client'
 
@@ -22,6 +22,7 @@ export interface PumpLog{
     minutes: number;
     seconds: number;
     note?:string;
+    created_at?: string;
 }
 
 
@@ -215,7 +216,7 @@ export default function Growth() {
                             </Text>
                             <View className='bg-gray-200 py-2 px-6 rounded-full'>
                                 <Text className='text-xl figtree'>
-                                    0.0z
+                                    {(parseFloat(leftAmount || '0') + parseFloat(rightAmount || '0')).toFixed(1)}oz
                                 </Text>
                             </View>
                         </View >
@@ -281,6 +282,9 @@ export default function Growth() {
                                 <Text className='text-xl figtree'>Clear</Text>
                             </Pressable>
                         </View>
+                        <Link href="/pump-history" className="mt-4">
+                            <Text className="text-blue-500 text-center">View Pump History</Text>
+                        </Link>
                     </View>
                 </View>
             </View>

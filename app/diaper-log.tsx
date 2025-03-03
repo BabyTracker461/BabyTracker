@@ -7,17 +7,19 @@ import {
     TouchableWithoutFeedback,
     ScrollView,
     TextInput,
+    KeyboardAvoidingView,
+    TouchableOpacity
 } from 'react-native';
 import React, { useState } from 'react';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import supabase from '@/app/lib/supabase-client';
-import { decryptData } from '@/app/lib/cryptoUtils';
+import { decryptData, encryptData } from '@/app/lib/cryptoUtils';
 
 interface DiaperLog {
     id: string;
     type: string;
-    rash: boolean;
+    rash: string;  // Changed to string ('true'/'false')
     note?: string;
     logged_at: string;
 }
@@ -26,6 +28,12 @@ export default function DiaperLogs() {
     const insets = useSafeAreaInsets();
     const [diaperLogs, setDiaperLogs] = useState<DiaperLog[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Editing Log State
+    const [editingLog, setEditingLog] = useState<DiaperLog | null>(null);
+    const [editedType, setEditedType] = useState<string>('');
+    const [editedRash, setEditedRash] = useState<string>('');  // Changed to string ('true'/'false')
+    const [editedNote, setEditedNote] = useState<string>('');
 
     // Filters
     const [filterEnabled, setFilterEnabled] = useState(false);
@@ -55,7 +63,7 @@ export default function DiaperLogs() {
                         return {
                             id: log.id,
                             type: await decryptData(log.type),
-                            rash: (await decryptData(log.rash)) === "true",
+                            rash: await decryptData(log.rash), // Decrypt as text
                             note: log.note ? await decryptData(log.note) : "No Notes",
                             logged_at: new Date(await decryptData(log.logged_at)).toISOString(),
                         };
@@ -76,7 +84,7 @@ export default function DiaperLogs() {
                 decryptedLogs = decryptedLogs.filter((log) => {
                     return (
                         (!filterType || log.type === filterType) &&
-                        (!filterRash || log.rash.toString() === filterRash) &&
+                        (!filterRash || log.rash === filterRash) &&
                         (!filterDate ||
                             log.logged_at.startsWith(filterDate)) // Match YYYY-MM-DD
                     );
@@ -92,6 +100,41 @@ export default function DiaperLogs() {
 
     const globalFeedbackUpdate = () => {
         if (Keyboard.isVisible()) Keyboard.dismiss();
+    };
+
+    // Updated handleUpdate function to encrypt fields before saving
+    const handleUpdate = async (logId: string) => {
+        try {
+            // Encrypt the updated values before saving them
+            const encryptedType = await encryptData(editedType);
+            const encryptedRash = await encryptData(editedRash);  // Store 'true'/'false' as string
+            const encryptedNote = await encryptData(editedNote);
+
+            const { error } = await supabase
+                .from('diaper_log')
+                .update({
+                    type: encryptedType,
+                    rash: encryptedRash, // Save as string ('true'/'false')
+                    note: encryptedNote,
+                })
+                .eq('id', logId);
+
+            if (error) {
+                console.error('❌ Error updating log:', error.message);
+                return;
+            }
+
+            // Update the log locally with unencrypted data for display
+            const updatedLogs = diaperLogs.map((log) =>
+                log.id === logId
+                    ? { ...log, type: editedType, rash: editedRash, note: editedNote }
+                    : log
+            );
+            setDiaperLogs(updatedLogs);
+            setEditingLog(null);
+        } catch (error) {
+            console.error('❌ Unexpected error in handleUpdate:', error);
+        }
     };
 
     return (
@@ -192,13 +235,132 @@ export default function DiaperLogs() {
                                     className="mb-4 p-4 border border-gray-300 rounded-lg bg-gray-100 shadow"
                                 >
                                     <Text className="text-lg font-bold">{`Type: ${log.type}`}</Text>
-                                    <Text className="text-md">{`Rash: ${log.rash ? 'Yes' : 'No'}`}</Text>
+                                    <Text className="text-md">{`Rash: ${log.rash === 'true' ? 'Yes' : 'No'}`}</Text>
                                     <Text className="text-md">{`Notes: ${log.note}`}</Text>
                                     <Text className="text-sm text-gray-600">{`Logged At: ${new Date(log.logged_at).toLocaleString()}`}</Text>
+
+                                    {/* Update Button */}
+                                    <Pressable
+                                        onPress={() => {
+                                            setEditingLog(log);
+                                            setEditedType(log.type);
+                                            setEditedRash(log.rash); // Set as string ('true'/'false')
+                                            setEditedNote(log.note || '');
+                                        }}
+                                        className="bg-yellow-500 p-2 rounded-lg mt-4"
+                                    >
+                                        <Text className="text-white text-md font-bold">Update</Text>
+                                    </Pressable>
+                                    
+                                    {/* Delete Button */}
+                                    <Pressable
+                                        onPress={async () => {
+                                            try {
+                                                const { error } = await supabase
+                                                    .from('diaper_log')
+                                                    .delete()
+                                                    .eq('id', log.id);
+
+                                                if (error) {
+                                                    console.error('❌ Error deleting log:', error.message);
+                                                    return;
+                                                }
+
+                                                setDiaperLogs(diaperLogs.filter((l) => l.id !== log.id));
+                                            } catch (error) {
+                                                console.error('❌ Unexpected error in handleDelete:', error);
+                                            }
+                                        }}
+                                        className="bg-red-500 p-2 rounded-lg mt-2"
+                                    >
+                                        <Text className="text-white text-md font-bold">Delete</Text>
+                                    </Pressable>
                                 </View>
                             ))
                         )}
                     </ScrollView>
+
+                    {/* Update Log Modal */}
+                    {editingLog && (
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            }}
+                        >
+                            <ScrollView
+                                contentContainerStyle={{
+                                    backgroundColor: '#fff',
+                                    padding: 20,
+                                    borderRadius: 10,
+                                    width: '80%',
+                                }}
+                            >
+                                <Text className="text-lg font-bold mb-4">Edit Log</Text>
+
+                                <TextInput
+                                    className="border border-gray-300 rounded-lg p-4 mb-6"
+                                    placeholder="Type"
+                                    value={editedType}
+                                    onChangeText={setEditedType}
+                                    style={{
+                                        fontSize: 16,
+                                    }}
+                                />
+                                
+                                <TextInput
+                                    className="border border-gray-300 rounded-lg p-4 mb-6"
+                                    placeholder="Rash (true/false)"
+                                    value={editedRash}
+                                    onChangeText={setEditedRash}
+                                    style={{
+                                        fontSize: 16,
+                                    }}
+                                />
+                                <TextInput
+                                    className="border border-gray-300 rounded-lg p-4 mb-6"
+                                    placeholder="Notes"
+                                    value={editedNote}
+                                    onChangeText={setEditedNote}
+                                    style={{
+                                        fontSize: 16,
+                                    }}
+                                />
+
+                                <View className="flex-row justify-between">
+                                    <TouchableOpacity
+                                        onPress={() => setEditingLog(null)}
+                                        style={{
+                                            backgroundColor: 'gray',
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 40,
+                                            borderRadius: 5,
+                                        }}
+                                    >
+                                        <Text className="text-white text-lg font-semibold">Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => handleUpdate(editingLog.id)}
+                                        style={{
+                                            backgroundColor: '#4CAF50',
+                                            paddingVertical: 12,
+                                            paddingHorizontal: 40,
+                                            borderRadius: 5,
+                                        }}
+                                    >
+                                        <Text className="text-white text-lg font-semibold">Save Changes</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
+                        </KeyboardAvoidingView>
+                    )}
                 </View>
             </TouchableWithoutFeedback>
         </>

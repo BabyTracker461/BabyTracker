@@ -3,11 +3,12 @@ import '@/global.css'
 import loadFonts from './lib/load-fonts'
 import { StatusBar } from 'expo-status-bar'
 import React from 'react'
+import { FeedingProvider } from './context/FeedingContext'
 
 export default function Layout() {
     if (loadFonts() == 1) return null
     return (
-        <>
+        <FeedingProvider>
             <StatusBar
                 backgroundColor='auto'
                 hideTransitionAnimation='none'
@@ -24,19 +25,14 @@ export default function Layout() {
                         headerShown: false,
                     }}
                 />
-                {/*<Stack.Screen
-                    name='profile'
-                    options={{
-                        presentation: 'containedModal',
-                    }}
-                />
                 <Stack.Screen
-                    name='calendar'
+                    name='feeding-history'
                     options={{
                         presentation: 'modal',
+                        title: 'Feeding History'
                     }}
-                />*/}
+                />
             </Stack>
-        </>
+        </FeedingProvider>
     )
 }

@@ -23,6 +23,7 @@ export default function Tab() {
         icon: string;
         link: any;
     };
+
     const buttons: Button[] = [
         { label: 'Sleep', icon: '🌙', link: '/sleep' },
         { label: 'Pump', icon: '🍼', link: '/pump' },
@@ -30,7 +31,9 @@ export default function Tab() {
         { label: 'Feeding', icon: '🍽️', link: '/feeding' },
         { label: 'Diaper', icon: '🧷', link: '/diaper' },
         { label: 'Growth', icon: '👶', link: '/growth' },
+        { label: 'Run Crypto Test', icon: '🔐', link: '/example' }, // ✅ New button for testing encryption
     ];
+
     return (
         <>
             <Stack.Screen
@@ -50,7 +53,7 @@ export default function Tab() {
                 {buttons.map((button, key) => (
                     <Link href={button.link} className='group' key={key}>
                         <View
-                            className='group-active:bg-blue-50 group-active:border-gray-300 border-4 w-52 h-52 rounded-[40] items-center justify-center bg-white' // items-center is x, justify-center is y
+                            className='group-active:bg-blue-50 group-active:border-gray-300 border-4 w-52 h-52 rounded-[40] items-center justify-center bg-white'
                         >
                             <Text className='text-7xl p-4'>{button.icon}</Text>
                             <Text

@@ -1,38 +1,43 @@
-import { Stack } from 'expo-router'
-import '@/global.css'
-import loadFonts from './lib/load-fonts'
+import { router, Stack } from 'expo-router'
+import '../global.css'
+import {
+    configureReanimatedLogger,
+    ReanimatedLogLevel,
+} from 'react-native-reanimated'
+import { AuthProvider } from '@/library/auth-provider'
 import { StatusBar } from 'expo-status-bar'
-import React from 'react'
-import { FeedingProvider } from './context/FeedingContext'
 
-export default function Layout() {
-    if (loadFonts() == 1) return null
+configureReanimatedLogger({
+    level: ReanimatedLogLevel.warn,
+    strict: false,
+})
+
+export default function RootLayout() {
     return (
-        <FeedingProvider>
-            <StatusBar
-                backgroundColor='auto'
-                hideTransitionAnimation='none'
-                style='dark'
-            />
+        <AuthProvider>
+            <StatusBar style='auto' />
             <Stack
                 screenOptions={{
-                    headerBackButtonDisplayMode: 'minimal',
+                    navigationBarTranslucent: true,
                 }}
             >
+                <Stack.Screen name='index' options={{ headerShown: false }} />
                 <Stack.Screen
-                    name='(tabs)'
+                    name='(trackers)'
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+                <Stack.Screen name='(logs)' options={{ headerShown: false }} />
+
+                <Stack.Screen
+                    name='(modals)'
                     options={{
                         headerShown: false,
-                    }}
-                />
-                <Stack.Screen
-                    name='feeding-history'
-                    options={{
                         presentation: 'modal',
-                        title: 'Feeding History'
                     }}
                 />
+                <Stack.Screen name='(auth)' options={{ headerShown: false }} />
             </Stack>
-        </FeedingProvider>
+        </AuthProvider>
     )
 }

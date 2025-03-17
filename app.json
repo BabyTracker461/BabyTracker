@@ -1,16 +1,15 @@
 {
   "expo": {
-    "name": "Baby Tracker",
-    "slug": "An intuitive & privacy focused baby tracker",
-    "version": "0.1.0",
+    "name": "simplebaby",
+    "slug": "simplebaby",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.anonymous.An-intuitive---privacy-focused-baby-tracker"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +23,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-font",
       "expo-router",
       [
         "expo-splash-screen",
@@ -34,8 +32,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

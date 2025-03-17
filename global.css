@@ -2,35 +2,176 @@
 @tailwind components;
 @tailwind utilities;
 
-.figtree {
-    font-family: 'Figtree';
+/* variables */
+/* :root {
+    --color-primary: #000000;
+    --color-secondary: #ffffff;
+    --color-accent: #f97316;
+} */
+
+.app-heading {
+    @apply text-xl scale-100;
 }
 
-.box-container {
-    @apply bg-gray-100 mb-4 flex-col items-center pt-20 pb-20 gap-10 rounded-3xl border-2 border-gray-300 justify-center;
+.manual-primary {
+    @apply bg-white dark:bg-[#2c4a4d] rounded-xl mt-5 flex-col;
 }
 
-.button {
-    @apply rounded-full pt-3 pb-3 pr-6 pl-6 mr-1 ml-1 border-[1px];
+.manual-foregound-text {
+    @apply text-xl dark:text-white;
 }
 
-.button:active {
-    @apply bg-gray-300;
+.stopwatch-clock {
+    @apply text-[5rem] scale-100 dark:text-[#edf7c8] tabular-nums;
 }
 
-.subheading {
-    @apply figtree text-3xl mt-2 mb-4;
-    font-weight: bold;
+.stopwatch-primary {
+    @apply bg-white dark:bg-[#3a645a] rounded-xl mt-5 flex-col;
 }
 
-.input-label {
-    @apply text-3xl figtree;
+.stopwatch-secondary {
+    @apply flex-row justify-between p-6 pr-12 pl-12 dark:bg-[#30504d] rounded-xl rounded-t-none;
+}
+
+.stopwatch-button {
+    @apply aspect-square p-4 scale-100 items-center justify-center rounded-full;
+}
+
+.stopwatch-button-text {
+    @apply uppercase font-light text-[0.9rem];
+}
+
+.stopwatch-divider {
+    @apply text-[3rem] scale-100 dark:text-[#e0d48f];
+}
+
+.stopwatch-mini {
+    @apply text-[1rem] scale-100 dark:text-[#ffffff];
+}
+
+.feeding-category-button {
+    @apply flex-col items-center justify-center w-[7rem] rounded-full dark:bg-[#234c47] p-4 gap-1 aspect-square scale-100;
+}
+
+.feeding-category-button-active {
+    @apply flex-col items-center justify-center w-[7rem] rounded-full dark:bg-[#568a7b] p-4 gap-1 aspect-square scale-100;
+}
+
+.feeding-category-text {
+    @apply dark:text-white uppercase scale-100;
+}
+
+.diaper-consistency-text {
+    @apply dark:text-white uppercase scale-100;
+}
+
+.nursing-side-text {
+    @apply dark:text-white uppercase scale-100 font-bold m-1;
+}
+
+.nursing-side-button-active {
+    @apply dark:bg-[#699d8e] p-4 w-[7rem] scale-100 items-center;
+}
+
+.nursing-side-button {
+    @apply dark:bg-[#243925] p-4 w-[7rem] scale-100 items-center;
+}
+
+.subtitle {
+    @apply text-xl mb-1 scale-100 dark:text-gray-400;
 }
 
 .input {
-    @apply input-label bg-gray-100 focus:bg-gray-300 p-4 rounded-lg;
+    @apply bg-gray-100 focus:bg-gray-300 p-4 rounded-lg;
 }
 
 .note {
     @apply bg-blue-100 rounded-3xl align-middle items-center p-3 pb-4 text-wrap max-h-[175px];
+}
+
+.button-2 {
+    @apply p-6 rounded-3xl;
+}
+
+.heading {
+    @apply text-5xl mb-2 scale-100 font-bold dark:text-white;
+}
+
+.monospace {
+    font-family: 'Menlo', 'Roboto Mono', 'Courier', monospace;
+}
+
+.subheading {
+    @apply text-3xl m-1 scale-100 dark:text-gray-200;
+}
+
+.main-container {
+    @apply p-4 dark:bg-[#0b2218] bg-[#fff5e4] h-full w-full transition-colors;
+}
+
+.button {
+    @apply rounded-full p-5 border-[1px] shadow-sm;
+}
+
+.button-red {
+    @apply dark:border-gray-600 bg-red-800 dark:bg-red-500 border-red-600 dark:shadow-red-600;
+}
+
+.button-normal {
+    @apply bg-[#2e5a4c] border-gray-600 dark:shadow-white dark:bg-[#bbdaf8] dark:border-gray-200;
+}
+
+.button-text {
+    @apply text-base text-white text-center dark:text-gray-700;
+}
+
+.text {
+    @apply text-base text-gray-700 dark:text-gray-300;
+}
+
+.text-input {
+    @apply border-2 dark:text-white border-gray-700 rounded-xl p-4 scale-100 focus:border-[#549461] dark:border-gray-300
+    placeholder:text-gray-600 dark:focus:border-blue-300;
+}
+
+.text-input-internal {
+    @apply border-2 dark:text-white border-gray-700 rounded-xl p-4 scale-100 focus:border-[#549461] dark:border-gray-300
+    placeholder:text-gray-300 dark:focus:border-orange-200;
+}
+
+.feeding-module-label {
+    @apply font-bold dark:text-white scale-100 text-lg pb-1;
+}
+
+.diaper-amount-text {
+    @apply scale-100 text-2xl font-bold dark:text-white;
+}
+
+.transition-padding {
+    transition-property: padding-bottom;
+    transition-timing-function: linear;
+    transition-duration: 100ms;
+    transition-delay: 10ms;
+}
+
+.tracker-button {
+    @apply bg-[#fff6c9] dark:bg-[#466755] flex-col items-center justify-center p-4 gap-2 aspect-square rounded-[2rem] border-2 border-[#c4b798]
+    dark:border-[#152619] ios:drop-shadow-sm android:shadow-md;
+}
+
+.tracker-bar-label {
+    @apply text-lg scale-100 font-bold text-yellow-800 dark:text-[#dbf9dd];
+}
+
+.tracker-bar {
+    @apply bg-[#fff6c9] dark:bg-[#466755] flex-row items-center justify-between p-4 gap-2 rounded-[2rem] border-2 border-[#c4b798]
+    dark:border-[#152619] ios:drop-shadow-sm android:shadow-md;
+}
+
+.tracker-label {
+    @apply text-lg scale-100 font-bold text-yellow-800 dark:text-[#dbf9dd];
+}
+
+.tracker-icon {
+    @apply text-[4.5rem] scale-100;
 }

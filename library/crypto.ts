@@ -1,7 +1,27 @@
 import CryptoES from 'crypto-es'
 import * as Crypto from 'expo-crypto'
+import * as SecureStore from 'expo-secure-store'
 import { Buffer } from 'buffer' // ✅ Import Buffer polyfill
-import { getEncryptionKey } from './supabase-client'
+
+const ENCRYPTION_KEY_NAME = 'encryption_key'
+
+/**
+ * Retrieves the encryption key from secure storage or generates one.
+ */
+const getEncryptionKey = async (): Promise<string> => {
+    let key = await SecureStore.getItemAsync(ENCRYPTION_KEY_NAME)
+
+    if (!key) {
+        const randomBytes = await Crypto.getRandomBytesAsync(32)
+        key = Buffer.from(randomBytes).toString('base64')
+        await SecureStore.setItemAsync(ENCRYPTION_KEY_NAME, key)
+        console.log('🔑 New encryption key generated and saved.')
+    } else {
+        console.log('🔑 Retrieved encryption key from SecureStore.')
+    }
+
+    return key
+}
 
 /**
  * Generates a 16-byte IV using Expo's Crypto API.
@@ -18,7 +38,6 @@ const getHashedKey = async (): Promise<string> => {
     const key = await getEncryptionKey()
     if (!key) throw new Error('❌ Encryption key not found')
 
-    // Use SHA-256 instead of PBKDF2 (async, non-blocking)
     return CryptoES.SHA256(key).toString(CryptoES.enc.Hex)
 }
 
@@ -28,18 +47,15 @@ const getHashedKey = async (): Promise<string> => {
 export const encryptData = async (data: string): Promise<string> => {
     const hashedKey = await getHashedKey()
 
-    // Generate a random IV (16 bytes for AES)
     const ivBytes = await getIV()
     const ivHex = CryptoES.enc.Hex.parse(Buffer.from(ivBytes).toString('hex'))
 
-    // Encrypt the data
     const encrypted = CryptoES.AES.encrypt(data, hashedKey, {
         iv: ivHex,
         mode: CryptoES.mode.CBC,
         padding: CryptoES.pad.Pkcs7,
     }).toString()
 
-    // Store IV + ciphertext
     const encryptedData = Buffer.from(ivBytes).toString('hex') + encrypted
     console.log('🔒 Encrypted Data:', encryptedData)
     return encryptedData
@@ -51,11 +67,9 @@ export const encryptData = async (data: string): Promise<string> => {
 export const decryptData = async (ciphertext: string): Promise<string> => {
     const hashedKey = await getHashedKey()
 
-    // Extract the IV (first 32 hex characters)
     const ivHex = ciphertext.substring(0, 32)
     const encryptedText = ciphertext.substring(32)
 
-    // Decrypt the data
     const decrypted = CryptoES.AES.decrypt(encryptedText, hashedKey, {
         iv: CryptoES.enc.Hex.parse(ivHex),
         mode: CryptoES.mode.CBC,
@@ -71,3 +85,4 @@ export default {
     encryptData,
     decryptData,
 }
+

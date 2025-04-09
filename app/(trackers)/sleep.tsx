@@ -14,6 +14,7 @@ import ManualEntry from '@/components/manual-entry-sleep'
 import supabase from '@/library/supabase-client'
 import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
+import { encryptData } from '@/library/crypto' // ✅ Encryption added
 
 export default function Sleep() {
     const insets = useSafeAreaInsets()
@@ -34,35 +35,43 @@ export default function Sleep() {
         endTime: Date,
         note = '',
     ) => {
-        // Calculate duration in hh:mm:ss format
-        const durationMs = endTime.getTime() - startTime.getTime()
-        const durationSec = Math.floor(durationMs / 1000)
+        try {
+            // Calculate duration in hh:mm:ss format
+            const durationMs = endTime.getTime() - startTime.getTime()
+            const durationSec = Math.floor(durationMs / 1000)
 
-        const hours = Math.floor(durationSec / 3600)
-        const minutes = Math.floor((durationSec % 3600) / 60)
-        const seconds = durationSec % 60
+            const hours = Math.floor(durationSec / 3600)
+            const minutes = Math.floor((durationSec % 3600) / 60)
+            const seconds = durationSec % 60
 
-        const duration = `${hours.toString().padStart(2, '0')}:${minutes
-            .toString()
-            .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+            const duration = `${hours.toString().padStart(2, '0')}:${minutes
+                .toString()
+                .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 
-        // Insert the sleep log
-        const { data, error } = await supabase.from('sleep_logs').insert([
-            {
-                child_id: childId,
-                start_time: startTime.toISOString(),
-                end_time: endTime.toISOString(),
-                duration: duration,
-                note: note,
-            },
-        ])
+            // Encrypt sensitive fields
+            const encryptedDuration = await encryptData(duration)
+            const encryptedNote = note ? await encryptData(note) : null
 
-        if (error) {
-            console.error('Error creating sleep log:', error)
-            return { success: false, error }
+            const { data, error } = await supabase.from('sleep_logs').insert([
+                {
+                    child_id: childId,
+                    start_time: startTime.toISOString(),
+                    end_time: endTime.toISOString(),
+                    duration: encryptedDuration,
+                    note: encryptedNote,
+                },
+            ])
+
+            if (error) {
+                console.error('Error creating sleep log:', error)
+                return { success: false, error }
+            }
+
+            return { success: true, data }
+        } catch (err) {
+            console.error('❌ Encryption or insert failed:', err)
+            return { success: false, error: 'Encryption or database error' }
         }
-
-        return { success: true, data }
     }
 
     const saveSleepLog = async (
@@ -71,7 +80,6 @@ export default function Sleep() {
         endTime: Date | null = null,
         note = '',
     ) => {
-        // Get the active child ID
         const { success, childId, error } = await getActiveChildId()
 
         if (!success) {
@@ -81,9 +89,7 @@ export default function Sleep() {
 
         let finalStartTime, finalEndTime
 
-        // Determine if we're using stopwatch or manual times
         if (stopwatchTime) {
-            // Parse stopwatch time (format: "hh:mm:ss")
             const [hours, minutes, seconds] = stopwatchTime
                 .split(':')
                 .map(Number)
@@ -101,12 +107,10 @@ export default function Sleep() {
             return { success: false, error: 'Missing time data' }
         }
 
-        // Create the sleep log
         return await createSleepLog(childId, finalStartTime, finalEndTime, note)
     }
 
     const handleSaveSleepLog = async () => {
-        // If using stopwatch
         if (stopwatchTime && stopwatchTime !== '00:00:00') {
             const result = await saveSleepLog(stopwatchTime, null, null, note)
             if (result.success) {
@@ -115,9 +119,7 @@ export default function Sleep() {
             } else {
                 Alert.alert(`Failed to save sleep log: ${result.error}`)
             }
-        }
-        // If using manual time entry
-        else if (startTime && endTime) {
+        } else if (startTime && endTime) {
             const result = await saveSleepLog(null, startTime, endTime, note)
             if (result.success) {
                 router.replace('/(tabs)')
@@ -184,3 +186,4 @@ export default function Sleep() {
         </TouchableWithoutFeedback>
     )
 }
+

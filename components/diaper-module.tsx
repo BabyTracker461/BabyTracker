@@ -5,8 +5,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 
-type DiaperConsistency = 'Wet' | 'Dry' | 'Mixed'
-type DiaperAmount = 'SM' | 'MD' | 'LG'
+import { diaper_amount, diaper_consistency } from '@/types/diaper'
 
 export default function DiaperModule({
     onTimeUpdate,
@@ -14,14 +13,14 @@ export default function DiaperModule({
     onAmountUpdate,
 }: {
     onTimeUpdate?: (time: Date) => void
-    onConsistencyUpdate?: (consistency: DiaperConsistency) => void
-    onAmountUpdate?: (amount: DiaperAmount) => void
+    onConsistencyUpdate?: (consistency: diaper_consistency) => void
+    onAmountUpdate?: (amount: diaper_amount) => void
 }) {
     const [changeTime, setChangeTime] = useState(new Date())
     const [showIOSPicker, setShowIOSPicker] = useState(false)
     const [selectedConsistency, setSelectedConsistency] =
-        useState<DiaperConsistency>('Wet')
-    const [selectedAmount, setSelectedAmount] = useState<DiaperAmount>('SM')
+        useState<diaper_consistency>('Wet')
+    const [selectedAmount, setSelectedAmount] = useState<diaper_amount>('SM')
 
     useEffect(() => {
         onTimeUpdate?.(changeTime)
@@ -69,11 +68,11 @@ export default function DiaperModule({
         })
     }
 
-    const handleConsistencyPress = (consistency: DiaperConsistency) => {
+    const handleConsistencyPress = (consistency: diaper_consistency) => {
         setSelectedConsistency(consistency)
     }
 
-    const handleAmountPress = (amount: DiaperAmount) => {
+    const handleAmountPress = (amount: diaper_amount) => {
         setSelectedAmount(amount)
     }
 

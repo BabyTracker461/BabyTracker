@@ -4,13 +4,12 @@ import { format } from 'date-fns'
 import { getActiveChildId } from '@/library/utils'
 import supabase from '@/library/supabase-client'
 
-// Define TypeScript interface based on diaper_logs schema
 interface DiaperLog {
     id: string
     consistency: string | null
     amount: string | null
     change_time: string
-    child_id: string
+    child_id?: string
     logged_at: string
     note: string | null
 }

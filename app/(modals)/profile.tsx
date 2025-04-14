@@ -13,6 +13,8 @@ import { signOut } from '@/library/auth'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Button from '@/components/button'
 import { StatusBar } from 'expo-status-bar'
+import { localDb, syncDiaperLogs } from '@/library/sqlite'
+import supabase from '@/library/supabase-client'
 
 export default function Profile() {
     const { session } = useAuth()
@@ -32,13 +34,27 @@ export default function Profile() {
         <SafeAreaView className='p-4 flex-col justify-between flex-grow'>
             <ScrollView>
                 <View className='flex-col gap-4'>
-                    <View className='bg-gray-200 rounded-full flex-row justify-between gap-4 mb-8'>
+                    <View className='bg-gray-200 rounded-full flex-row justify-between gap-4'>
                         <Text className='p-4 text-2xl scale-100 border-[1px] border-transparent'>
                             Active Child
                         </Text>
                         <Text className='p-4 text-2xl scale-100 font-bold bg-white rounded-full border-[1px] border-gray-300 text-[#f9a000]'>
                             👶 {session?.user.user_metadata?.activeChild}
                         </Text>
+                    </View>
+                    <View className='bg-gray-200 rounded-full flex-row justify-between gap-4 mb-8'>
+                        <Text className='p-4 text-2xl scale-100 border-[1px] border-transparent'>
+                            Database
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                syncDiaperLogs(localDb(), supabase)
+                            }}
+                        >
+                            <Text className='p-4 text-2xl scale-100 font-bold bg-white rounded-full border-[1px] border-gray-300 text-[#a0d900]'>
+                                🔄 Sync
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View className='bg-gray-200 rounded-full flex-row justify-between gap-4'>
                         <Text className='p-4 text-lg scale-100 bg-white rounded-full border-[1px] border-gray-300'>

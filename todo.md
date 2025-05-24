@@ -1,0 +1,12 @@
+-   [] guest mode
+-   [] back button fix on android
+-   [] add custom popup alerts framework
+-   [] add child management screens (add, remove, switch)
+-   [] add caretaker account option (and caretaker permission manager)
+-   [] add change password, change email, forgot password
+-   [] fix time picker label in sleep tracker displaying incorrect label in
+    android
+-   [] improve implementation of reset field in sleep tracker
+-   [] port log editing feature to current logs
+-   [] add milestones (s3 buckets for video and photo storage)
+-   []

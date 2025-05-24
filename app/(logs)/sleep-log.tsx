@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, FlatList, StyleSheet } from 'react-native'
+import {
+    View,
+    Text,
+    FlatList,
+    ActivityIndicator,
+    Alert,
+    TextInput,
+    Modal,
+    TouchableOpacity,
+    Pressable,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView
+} from 'react-native'
 import { format } from 'date-fns'
 import { getActiveChildId } from '@/library/utils'
 import supabase from '@/library/supabase-client'
+import { decryptData, encryptData } from '@/library/crypto'
 
-// Define the shape of a sleep log entry
 interface SleepLog {
     id: string
     start_time: string
@@ -13,11 +26,12 @@ interface SleepLog {
     note: string | null
 }
 
-// Component to display sleep logs
 const SleepLogsView: React.FC = () => {
     const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
-    const [loading, setLoading] = useState<boolean>(true)
+    const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [editingLog, setEditingLog] = useState<SleepLog | null>(null)
+    const [editModalVisible, setEditModalVisible] = useState(false)
 
     useEffect(() => {
         fetchSleepLogs()
@@ -25,21 +39,15 @@ const SleepLogsView: React.FC = () => {
 
     const fetchSleepLogs = async () => {
         try {
-            const {
-                success,
-                childId,
-                error: childError,
-            } = await getActiveChildId()
+            const { success, childId, error: childError } = await getActiveChildId()
             if (!success || !childId) {
                 throw new Error(
                     typeof childError === 'string'
                         ? childError
-                        : childError?.message ||
-                          'Failed to get active child ID',
+                        : childError?.message || 'Failed to get active child ID'
                 )
             }
 
-            // Supabase query with TypeScript generics
             const { data, error } = await supabase
                 .from('sleep_logs')
                 .select('*')
@@ -47,110 +55,201 @@ const SleepLogsView: React.FC = () => {
                 .order('start_time', { ascending: false })
 
             if (error) throw error
-            setSleepLogs(data || [])
-        } catch (err) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : 'An unknown error occurred',
+
+            const safeDecrypt = async (value: string | null): Promise<string> => {
+                if (!value || !value.includes('U2FsdGVkX1')) return value || ''
+                try {
+                    return await decryptData(value)
+                } catch (err) {
+                    console.warn('⚠️ Decryption failed for:', value)
+                    return '[Decryption Failed]'
+                }
+            }
+
+            const decrypted = await Promise.all(
+                (data || []).map(async (entry) => ({
+                    ...entry,
+                    note: await safeDecrypt(entry.note),
+                }))
             )
+
+            setSleepLogs(decrypted)
+        } catch (err) {
+            console.error('❌ Fetch or decryption error:', err)
+            setError(err instanceof Error ? err.message : 'An unknown error occurred')
         } finally {
             setLoading(false)
         }
     }
 
+    const handleDelete = async (id: string) => {
+        Alert.alert('Delete Entry', 'Are you sure you want to delete this log?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    const { error } = await supabase
+                        .from('sleep_logs')
+                        .delete()
+                        .eq('id', id)
+                    if (error) {
+                        Alert.alert('Error deleting log')
+                        return
+                    }
+                    setSleepLogs((prev) => prev.filter((log) => log.id !== id))
+                },
+            },
+        ])
+    }
+
+    const handleSaveEdit = async () => {
+        if (!editingLog) return
+
+        try {
+            const encryptedNote = editingLog.note ? await encryptData(editingLog.note) : null
+
+            const { error } = await supabase
+                .from('sleep_logs')
+                .update({
+                    start_time: editingLog.start_time,
+                    end_time: editingLog.end_time,
+                    duration: editingLog.duration,
+                    note: encryptedNote,
+                })
+                .eq('id', editingLog.id)
+
+            if (error) {
+                Alert.alert('Failed to update log')
+                return
+            }
+
+            await fetchSleepLogs()
+            setEditModalVisible(false)
+        } catch (err) {
+            console.error('❌ Encryption or update error:', err)
+            Alert.alert('Something went wrong during save.')
+        }
+    }
+
     const renderSleepLogItem = ({ item }: { item: SleepLog }) => (
-        <View style={styles.logItem}>
-            <Text style={styles.dateText}>
+        <View className="bg-white rounded-xl p-4 mb-4 shadow">
+            <Text className="text-lg font-bold mb-2">
                 {format(new Date(item.start_time), 'MMM dd, yyyy')}
             </Text>
-            <View style={styles.timeContainer}>
-                <Text style={styles.timeText}>
-                    Start: {format(new Date(item.start_time), 'h:mm a')}
-                </Text>
-                <Text style={styles.timeText}>
-                    End: {format(new Date(item.end_time), 'h:mm a')}
-                </Text>
-            </View>
-            {item.duration && (
-                <Text style={styles.durationText}>
-                    Duration: {item.duration}
-                </Text>
-            )}
+            <Text className="text-base mb-1">
+                Start: {format(new Date(item.start_time), 'h:mm a')}
+            </Text>
+            <Text className="text-base mb-1">
+                End: {format(new Date(item.end_time), 'h:mm a')}
+            </Text>
+            <Text className="text-base mb-1">
+                Duration: {item.duration || 'N/A'}
+            </Text>
             {item.note && (
-                <Text style={styles.noteText}>Note: {item.note}</Text>
+                <Text className="text-sm italic text-gray-500 mt-1">📝 {item.note}</Text>
             )}
+            <View className="flex-row justify-end gap-3 mt-4">
+                <Pressable
+                    className="px-3 py-2 rounded-full bg-blue-100"
+                    onPress={() => {
+                        setEditingLog(item)
+                        setEditModalVisible(true)
+                    }}
+                >
+                    <Text className="text-blue-700">✏️ Edit</Text>
+                </Pressable>
+                <Pressable
+                    className="px-3 py-2 rounded-full bg-red-100"
+                    onPress={() => handleDelete(item.id)}
+                >
+                    <Text className="text-red-700">🗑️ Delete</Text>
+                </Pressable>
+            </View>
         </View>
     )
 
-    if (loading) {
-        return <Text>Loading sleep logs...</Text>
-    }
-
-    if (error) {
-        return <Text>Error: {error}</Text>
-    }
-
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Sleep Logs</Text>
-            <FlatList
-                data={sleepLogs}
-                renderItem={renderSleepLogItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+        <View className="flex-1 bg-gray-50 p-4">
+            <Text className="text-2xl font-bold mb-4">🛏️ Sleep Logs</Text>
+            {loading ? (
+                <ActivityIndicator size="large" color="#e11d48" />
+            ) : error ? (
+                <Text className="text-red-600 text-center">Error: {error}</Text>
+            ) : (
+                <FlatList
+                    data={sleepLogs}
+                    renderItem={renderSleepLogItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={{ paddingBottom: 16 }}
+                />
+            )}
+
+            <Modal
+                visible={editModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setEditModalVisible(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={{ flex: 1 }}
+                >
+                    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16, backgroundColor: '#00000099' }}>
+                        <View className="bg-white w-full rounded-2xl p-6">
+                            <Text className="text-xl font-bold mb-4">Edit Sleep Log</Text>
+                            <Text className="text-sm text-gray-500 mb-1">Start Time</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-3"
+                                value={editingLog?.start_time || ''}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) => prev ? { ...prev, start_time: text } : prev)
+                                }
+                            />
+                            <Text className="text-sm text-gray-500 mb-1">End Time</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-3"
+                                value={editingLog?.end_time || ''}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) => prev ? { ...prev, end_time: text } : prev)
+                                }
+                            />
+                            <Text className="text-sm text-gray-500 mb-1">Duration</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-3"
+                                value={editingLog?.duration || ''}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) => prev ? { ...prev, duration: text } : prev)
+                                }
+                            />
+                            <Text className="text-sm text-gray-500 mb-1">Note</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-6"
+                                value={editingLog?.note || ''}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) => prev ? { ...prev, note: text } : prev)
+                                }
+                            />
+                            <View className="flex-row justify-end gap-3">
+                                <TouchableOpacity
+                                    className="bg-gray-200 rounded-full px-4 py-2"
+                                    onPress={() => setEditModalVisible(false)}
+                                >
+                                    <Text>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    className="bg-green-500 rounded-full px-4 py-2"
+                                    onPress={handleSaveEdit}
+                                >
+                                    <Text className="text-white">Save</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </Modal>
         </View>
     )
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: '#f5f5f5',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    listContainer: {
-        paddingBottom: 16,
-    },
-    logItem: {
-        backgroundColor: 'white',
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    dateText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    timeContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    timeText: {
-        fontSize: 16,
-    },
-    durationText: {
-        fontSize: 16,
-        marginBottom: 4,
-    },
-    noteText: {
-        fontSize: 14,
-        fontStyle: 'italic',
-        color: '#666',
-    },
-})
-
-export default SleepLogsView
+export default SleepLogsView;

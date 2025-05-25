@@ -1,11 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 
+/**
+ * Stopwatch component that tracks elapsed time in seconds.
+ * Users can start, stop, and reset the timer.
+ * Elapsed time is formatted as hh:mm:ss and reported to parent via callback.
+ */
 export default function Stopwatch({ onTimeUpdate }: any) {
     const [time, setTime] = useState(0)
     const [running, setRunning] = useState(false)
     const intervalRef = useRef<any>(null)
 
+    // Start or stop the timer based on `running` state
     useEffect(() => {
         if (running) {
             intervalRef.current = setInterval(() => {
@@ -21,12 +27,14 @@ export default function Stopwatch({ onTimeUpdate }: any) {
         onTimeUpdate?.(formatElapsedTime(time))
     }, [time, onTimeUpdate])
 
+     // Reset timer and stop running
     const reset = () => {
         setTime(0)
         setRunning(false)
         onTimeUpdate?.('00:00:00')
     }
 
+    // Convert elapsed seconds to hh:mm:ss format
     const formatTime = (t: number) => t.toString().padStart(2, '0')
     const formatElapsedTime = (t: number) => {
         const h = Math.floor(t / 3600)

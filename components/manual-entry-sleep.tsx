@@ -5,6 +5,12 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 
+
+/**
+ * ManualEntry component allows users to pick start and end times manually.
+ * Supports both iOS (inline spinner picker) and Android (native time picker dialog).
+ * Calls onDatesUpdate callback whenever start or end time changes.
+ */
 export default function ManualEntry({
     onDatesUpdate,
 }: {
@@ -21,6 +27,7 @@ export default function ManualEntry({
         onDatesUpdate?.(startDate, endDate)
     }, [startDate, endDate, onDatesUpdate])
 
+    // Handles date change from picker, updates corresponding time, hides iOS picker
     const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (event.type === 'set' && selectedDate) {
             if (currentPickerMode === 'start') {
@@ -32,6 +39,7 @@ export default function ManualEntry({
         setShowIOSPicker(false)
     }
 
+    // Opens Android time picker dialog for selected mode (start or end)
     const showTimePicker = (mode: 'start' | 'end') => {
         setCurrentPickerMode(mode)
 
@@ -55,6 +63,7 @@ export default function ManualEntry({
         }
     }
 
+    // Format Date object to hh:mm AM/PM string
     const formatTime = (date: Date) => {
         return date.toLocaleTimeString([], {
             hour: '2-digit',

@@ -5,6 +5,14 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker'
 import { View, Text, TouchableOpacity, Platform, TextInput } from 'react-native'
 
+/**
+ * FeedingCategory component allows users to select a feeding category,
+ * input item name, amount, and pick a feeding time manually.
+ * Supports iOS inline spinner picker and Android native time picker dialog.
+ * Calls corresponding callbacks whenever feeding time, category,
+ * item name, or amount updates.
+ */
+
 type FeedingCategory = 'Liquid' | 'Soft' | 'Solid'
 
 export default function FeedingCategory({
@@ -41,6 +49,7 @@ export default function FeedingCategory({
         onAmountUpdate?.(amount)
     }, [amount, onAmountUpdate])
 
+    // Handles time picker change event, updates feedingTime
     const onChangeTime = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (event.type === 'set' && selectedDate) {
             setFeedingTime(selectedDate)
@@ -48,6 +57,7 @@ export default function FeedingCategory({
         // setShowIOSPicker(false)
     }
 
+     // Shows or hides time picker, supports Android native dialog or iOS inline spinner
     const showTimePicker = () => {
         if (showIOSPicker) {
             return setShowIOSPicker(false)

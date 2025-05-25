@@ -6,9 +6,12 @@ import { useEffect } from "react";
 import { ActivityIndicator, Dimensions, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
+// RootIndex.tsx
+// Entry screen for the app — handles redirect if user is already logged in, otherwise shows welcome screen with sign-in/up options
 export default function RootIndex() {
   const { session, loading } = useAuth();
 
+  // If user is authenticated and loading is complete, redirect to home tabs
   useEffect(() => {
     // Once loading is done, if session exists, redirect to (tabs)
     if (!loading && session) {
@@ -16,6 +19,7 @@ export default function RootIndex() {
     }
   }, [session, loading, router]);
 
+  // Loading state with spinner
   if (loading) {
     return (
       <View
@@ -30,6 +34,8 @@ export default function RootIndex() {
     );
   }
 
+  
+  // Navigation handlers for auth routes
   const { width } = Dimensions.get("window");
   const handleSignIn = () => {
     return router.replace("/(auth)/signin");
@@ -59,6 +65,7 @@ export default function RootIndex() {
             transition={1000}
           />
         </View>
+         {/* App welcome text */}
         <View className="mt-10">
           <Text className="subheading">Welcome to</Text>
           <Text className="heading">SimpleBaby</Text>
@@ -66,6 +73,7 @@ export default function RootIndex() {
             A secure baby tracker that's easy to use.
           </Text>
         </View>
+        {/* Auth action buttons */}
         <View className="flex-col gap-2 mt-10">
           <Button
             text="Sign In"

@@ -15,6 +15,8 @@ import supabase from '@/library/supabase-client'
 import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 
+// Sleep.tsx
+// Screen for logging baby sleep sessions — includes stopwatch, manual entry, notes, and save logic
 export default function Sleep() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)
@@ -23,11 +25,13 @@ export default function Sleep() {
     const [stopwatchTime, setStopwatchTime] = useState('00:00:00')
     const [note, setNote] = useState('')
 
+    // Update manual entry times
     const handleDatesUpdate = (start: Date, end: Date) => {
         setStartTime(start)
         setEndTime(end)
     }
 
+     // Create a sleep log entry for Supabase
     const createSleepLog = async (
         childId: string,
         startTime: Date,
@@ -65,6 +69,7 @@ export default function Sleep() {
         return { success: true, data }
     }
 
+    // Prepare and validate sleep log data before saving
     const saveSleepLog = async (
         stopwatchTime: string | null = null,
         startTime: Date | null = null,
@@ -105,6 +110,7 @@ export default function Sleep() {
         return await createSleepLog(childId, finalStartTime, finalEndTime, note)
     }
 
+    // Handle UI logic for saving a sleep entry depending on method
     const handleSaveSleepLog = async () => {
         // If using stopwatch
         if (stopwatchTime && stopwatchTime !== '00:00:00') {
@@ -133,18 +139,25 @@ export default function Sleep() {
     }
 
     return (
+        // Dismiss keyboard when touching outside inputs
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View
                 className='main-container justify-between'
                 style={{ paddingBottom: insets.bottom }}
             >
+                {/* Main form stack with stopwatch and manual entry */}
                 <View
                     className={`gap-6 transition-all duration-300 ${
                         isTyping ? '-translate-y-[40%]' : 'translate-y-0'
                     }`}
                 >
+                    {/* Stopwatch component for tracking session duration */}
                     <Stopwatch onTimeUpdate={setStopwatchTime} />
+
+                    {/* Manual start/end time picker */}
                     <ManualEntry onDatesUpdate={handleDatesUpdate} />
+
+                    {/* Note input section */}
                     <View className='bottom-5'>
                         <View className='items-start top-5 left-3 z-10'>
                             <Text className='bg-gray-200 p-3 rounded-xl font'>
@@ -166,6 +179,7 @@ export default function Sleep() {
                         </View>
                     </View>
                 </View>
+                {/* Action buttons */}
                 <View className='flex-row gap-2'>
                     <TouchableOpacity
                         className='rounded-full p-4 bg-red-100 grow'

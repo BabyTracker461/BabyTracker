@@ -14,6 +14,7 @@ import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import FeedingCategory from '@/components/feeding-category'
 
+
 export default function Feeding() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)

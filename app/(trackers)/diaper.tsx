@@ -14,6 +14,9 @@ import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import DiaperModule from '@/components/diaper-module'
 
+// Diaper.tsx
+// Screen for logging diaper changes — includes selecting consistency, amount, change time, notes, and save logic
+
 export default function Diaper() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)
@@ -22,6 +25,7 @@ export default function Diaper() {
     const [changeTime, setChangeTime] = useState(new Date())
     const [note, setNote] = useState('')
 
+    // Create a new diaper log into the database
     const createDiaperLog = async (
         childId: string,
         consistency: string,
@@ -47,6 +51,7 @@ export default function Diaper() {
         return { success: true, data }
     }
 
+    // Get active child ID and save diaper log
     const saveDiaperLog = async () => {
         const { success, childId, error } = await getActiveChildId()
 
@@ -64,6 +69,7 @@ export default function Diaper() {
         )
     }
 
+    // Validate and handle save action with alerts
     const handleSaveDiaperLog = async () => {
         if (consistency && amount) {
             const result = await saveDiaperLog()
@@ -84,6 +90,7 @@ export default function Diaper() {
                 className='main-container justify-between'
                 style={{ paddingBottom: insets.bottom }}
             >
+                {/* Main form stack with diaper inputs and note */}
                 <View
                     className={`gap-6 transition-all duration-300 ${
                         isTyping ? '-translate-y-[40%]' : 'translate-y-0'
@@ -94,6 +101,7 @@ export default function Diaper() {
                         onAmountUpdate={setAmount}
                         onTimeUpdate={setChangeTime}
                     />
+                    {/* Note input section */}
                     <View className='bottom-5'>
                         <View className='items-start top-5 left-3 z-10'>
                             <Text className='bg-gray-200 p-3 rounded-xl font'>
@@ -115,6 +123,7 @@ export default function Diaper() {
                         </View>
                     </View>
                 </View>
+                {/* Action buttons row */}
                 <View className='flex-row gap-2'>
                     <TouchableOpacity
                         className='rounded-full p-4 bg-red-100 grow'

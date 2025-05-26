@@ -1,224 +1,241 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  TextInput,
-  Modal,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { getActiveChildId } from '@/library/utils';
-import supabase from '@/library/supabase-client';
-import { decryptData, encryptData } from '@/library/crypto';
-import { format } from 'date-fns';
+    View,
+    Text,
+    FlatList,
+    ActivityIndicator,
+    Alert,
+    TextInput,
+    Modal,
+    TouchableOpacity,
+    Pressable,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+} from 'react-native'
+import { format } from 'date-fns'
+import { getActiveChildId } from '@/library/utils'
+import supabase from '@/library/supabase-client'
+import { encryptData, decryptData } from '@/library/crypto'
 
-interface HealthLog {
-  id: string;
-  child_id: string;
-  category: string;
-  date: string;
-  growth_length: string | null;
-  growth_weight: string | null;
-  growth_head: string | null;
-  activity_type: string | null;
-  activity_duration: string | null;
-  meds_name: string | null;
-  meds_amount: string | null;
-  meds_time_taken: string | null;
-  note: string | null;
+interface DiaperLog {
+    id: string
+    child_id: string
+    consistency: string
+    amount: string
+    logged_at: string
+    note: string | null
 }
 
-const HealthLogsView: React.FC = () => {
-  const [logs, setLogs] = useState<HealthLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editingLog, setEditingLog] = useState<HealthLog | null>(null);
-  const [editModalVisible, setEditModalVisible] = useState(false);
+const DiaperLogsView: React.FC = () => {
+    const [diaperLogs, setDiaperLogs] = useState<DiaperLog[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchHealthLogs();
-  }, []);
+    const [editingLog, setEditingLog] = useState<DiaperLog | null>(null)
+    const [editModalVisible, setEditModalVisible] = useState(false)
 
-  const safeDecrypt = async (value: string | null): Promise<string> => {
-    if (!value || !value.includes('U2FsdGVkX1')) return '';
-    try {
-      return await decryptData(value);
-    } catch {
-      return '[Decryption Failed]';
+    useEffect(() => {
+        fetchDiaperLogs()
+    }, [])
+
+    const fetchDiaperLogs = async () => {
+        try {
+            const { success, childId, error: childError } = await getActiveChildId()
+            if (!success || !childId) {
+                throw new Error(typeof childError === 'string' ? childError : childError?.message || 'Failed to get active child ID')
+            }
+
+            const { data, error } = await supabase
+                .from('diaper_logs')
+                .select('*')
+                .eq('child_id', childId)
+                .order('logged_at', { ascending: false })
+
+            if (error) throw error
+
+            const safeDecrypt = async (value: string | null): Promise<string> => {
+                if (!value || !value.includes('U2FsdGVkX1')) return ''
+                try {
+                    return await decryptData(value)
+                } catch (err) {
+                    console.warn('⚠️ Decryption failed for:', value)
+                    return '[Decryption Failed]'
+                }
+            }
+
+            const decryptedLogs = await Promise.all(
+                (data || []).map(async (entry) => ({
+                    ...entry,
+                    consistency: await safeDecrypt(entry.consistency),
+                    amount: await safeDecrypt(entry.amount),
+                    note: entry.note ? await safeDecrypt(entry.note) : '',
+                }))
+            )
+
+            setDiaperLogs(decryptedLogs)
+        } catch (err) {
+            console.error('❌ Fetch or decryption error:', err)
+            setError(err instanceof Error ? err.message : 'An unknown error occurred')
+        } finally {
+            setLoading(false)
+        }
     }
-  };
 
-  const fetchHealthLogs = async () => {
-    try {
-      const { success, childId, error: childError } = await getActiveChildId();
-      if (!success || !childId) {
-        throw new Error(childError || 'Failed to get child ID');
-      }
-
-      const { data, error } = await supabase
-        .from('health_logs')
-        .select('*')
-        .eq('child_id', childId)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-
-      const decrypted = await Promise.all(
-        (data || []).map(async (entry) => ({
-          ...entry,
-          growth_length: await safeDecrypt(entry.growth_length),
-          growth_weight: await safeDecrypt(entry.growth_weight),
-          growth_head: await safeDecrypt(entry.growth_head),
-          activity_type: await safeDecrypt(entry.activity_type),
-          activity_duration: await safeDecrypt(entry.activity_duration),
-          meds_name: await safeDecrypt(entry.meds_name),
-          meds_amount: await safeDecrypt(entry.meds_amount),
-          note: await safeDecrypt(entry.note),
-        }))
-      );
-
-      setLogs(decrypted);
-    } catch (err) {
-      console.error('❌ Fetch or decryption error:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
+    const handleDelete = async (id: string) => {
+        Alert.alert('Delete Entry', 'Are you sure you want to delete this log?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    const { error } = await supabase.from('diaper_logs').delete().eq('id', id)
+                    if (error) {
+                        Alert.alert('Error deleting log')
+                        return
+                    }
+                    setDiaperLogs((prev) => prev.filter((log) => log.id !== id))
+                },
+            },
+        ])
     }
-  };
 
-  const handleSaveEdit = async () => {
-    if (!editingLog) return;
-    try {
-      const updated = {
-        growth_length: editingLog.growth_length ? await encryptData(editingLog.growth_length) : null,
-        growth_weight: editingLog.growth_weight ? await encryptData(editingLog.growth_weight) : null,
-        growth_head: editingLog.growth_head ? await encryptData(editingLog.growth_head) : null,
-        activity_type: editingLog.activity_type ? await encryptData(editingLog.activity_type) : null,
-        activity_duration: editingLog.activity_duration ? await encryptData(editingLog.activity_duration) : null,
-        meds_name: editingLog.meds_name ? await encryptData(editingLog.meds_name) : null,
-        meds_amount: editingLog.meds_amount ? await encryptData(editingLog.meds_amount) : null,
-        note: editingLog.note ? await encryptData(editingLog.note) : null,
-      };
+    const handleSaveEdit = async () => {
+        if (!editingLog) return
 
-      const { error } = await supabase
-        .from('health_logs')
-        .update(updated)
-        .eq('id', editingLog.id);
+        try {
+            const { id, consistency, amount, note } = editingLog
 
-      if (error) {
-        Alert.alert('Error updating log');
-        return;
-      }
+            const encryptedConsistency = await encryptData(consistency)
+            const encryptedAmount = await encryptData(amount)
+            const encryptedNote = note ? await encryptData(note) : null
 
-      await fetchHealthLogs();
-      setEditModalVisible(false);
-    } catch (err) {
-      console.error('❌ Encryption or update error:', err);
-      Alert.alert('Encryption or update failed');
+            const { error } = await supabase
+                .from('diaper_logs')
+                .update({
+                    consistency: encryptedConsistency,
+                    amount: encryptedAmount,
+                    note: encryptedNote,
+                })
+                .eq('id', id)
+
+            if (error) {
+                Alert.alert('Failed to update log')
+                return
+            }
+
+            await fetchDiaperLogs()
+            setEditModalVisible(false)
+        } catch (err) {
+            console.error('❌ Encryption or update error:', err)
+            Alert.alert('Something went wrong during save.')
+        }
     }
-  };
 
-  const handleDelete = async (id: string) => {
-    Alert.alert('Delete Entry', 'Are you sure you want to delete this log?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const { error } = await supabase
-            .from('health_logs')
-            .delete()
-            .eq('id', id);
-          if (error) {
-            Alert.alert('Error deleting log');
-            return;
-          }
-          setLogs((prev) => prev.filter((log) => log.id !== id));
-        },
-      },
-    ]);
-  };
-
-  const renderLog = ({ item }: { item: HealthLog }) => (
-    <View className="bg-white rounded-xl p-4 mb-4 shadow">
-      <Text className="text-lg font-bold mb-1">{item.category}</Text>
-      <Text className="text-base">{format(new Date(item.date), 'MMM dd, yyyy')}</Text>
-      {item.growth_length && <Text>Length: {item.growth_length} cm</Text>}
-      {item.growth_weight && <Text>Weight: {item.growth_weight} kg</Text>}
-      {item.growth_head && <Text>Head: {item.growth_head} cm</Text>}
-      {item.activity_type && <Text>Activity: {item.activity_type}</Text>}
-      {item.activity_duration && <Text>Duration: {item.activity_duration}</Text>}
-      {item.meds_name && <Text>Med: {item.meds_name}</Text>}
-      {item.meds_amount && <Text>Amount: {item.meds_amount}</Text>}
-      {item.note && <Text className="italic text-gray-500">📝 {item.note}</Text>}
-      <View className="flex-row justify-end mt-3 gap-3">
-        <Pressable className="px-3 py-2 rounded-full bg-blue-100" onPress={() => { setEditingLog(item); setEditModalVisible(true); }}>
-          <Text className="text-blue-700">✏️ Edit</Text>
-        </Pressable>
-        <Pressable className="px-3 py-2 rounded-full bg-red-100" onPress={() => handleDelete(item.id)}>
-          <Text className="text-red-700">🗑️ Delete</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-
-  return (
-    <View className="flex-1 bg-gray-50 p-4">
-      <Text className="text-2xl font-bold mb-4">🩺 Health Logs</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#e11d48" />
-      ) : error ? (
-        <Text className="text-red-600 text-center">Error: {error}</Text>
-      ) : (
-        <FlatList
-          data={logs}
-          renderItem={renderLog}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 16 }}
-        />
-      )}
-
-      <Modal
-        visible={editModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16, backgroundColor: '#00000099' }}>
-            <View className="bg-white w-full rounded-2xl p-6">
-              <Text className="text-xl font-bold mb-4">Edit Health Log</Text>
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Length (cm)" value={editingLog?.growth_length || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, growth_length: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Weight (kg)" value={editingLog?.growth_weight || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, growth_weight: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Head (cm)" value={editingLog?.growth_head || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, growth_head: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Activity Type" value={editingLog?.activity_type || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, activity_type: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Activity Duration" value={editingLog?.activity_duration || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, activity_duration: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Medication Name" value={editingLog?.meds_name || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, meds_name: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-3" placeholder="Medication Amount" value={editingLog?.meds_amount || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, meds_amount: text } : prev)} />
-              <TextInput className="border border-gray-300 rounded-xl px-3 py-2 mb-6" placeholder="Note" value={editingLog?.note || ''} onChangeText={(text) => setEditingLog((prev) => prev ? { ...prev, note: text } : prev)} />
-              <View className="flex-row justify-end gap-3">
-                <TouchableOpacity className="bg-gray-200 rounded-full px-4 py-2" onPress={() => setEditModalVisible(false)}>
-                  <Text>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="bg-green-500 rounded-full px-4 py-2" onPress={handleSaveEdit}>
-                  <Text className="text-white">Save</Text>
-                </TouchableOpacity>
-              </View>
+    const renderDiaperLogItem = ({ item }: { item: DiaperLog }) => (
+        <View className="bg-white rounded-xl p-4 mb-4 shadow">
+            <Text className="text-lg font-bold mb-2">
+                {format(new Date(item.logged_at), 'MMM dd, yyyy')}
+            </Text>
+            <Text className="text-base mb-1">
+                {format(new Date(item.logged_at), 'h:mm a')}
+            </Text>
+            <Text className="text-base mb-1">Consistency: {item.consistency}</Text>
+            <Text className="text-base mb-1">Size: {item.amount}</Text>
+            {item.note && (
+                <Text className="text-sm italic text-gray-500 mt-1">📝 {item.note}</Text>
+            )}
+            <View className="flex-row justify-end gap-3 mt-4">
+                <Pressable className="px-3 py-2 rounded-full bg-blue-100" onPress={() => { setEditingLog(item); setEditModalVisible(true); }}>
+                    <Text className="text-blue-700">✏️ Edit</Text>
+                </Pressable>
+                <Pressable className="px-3 py-2 rounded-full bg-red-100" onPress={() => handleDelete(item.id)}>
+                    <Text className="text-red-700">🗑️ Delete</Text>
+                </Pressable>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
-    </View>
-  );
-};
+        </View>
+    )
 
-export default HealthLogsView;
+    return (
+        <View className="flex-1 bg-gray-50 p-4">
+            <Text className="text-2xl font-bold mb-4">🧷 Diaper Logs</Text>
+            {loading ? (
+                <ActivityIndicator size="large" color="#e11d48" />
+            ) : error ? (
+                <Text className="text-red-600 text-center">Error: {error}</Text>
+            ) : (
+                <FlatList
+                    data={diaperLogs}
+                    renderItem={renderDiaperLogItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={{ paddingBottom: 16 }}
+                />
+            )}
+
+            {/* Edit Modal */}
+            <Modal
+                visible={editModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setEditModalVisible(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={{ flex: 1 }}
+                >
+                    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16, backgroundColor: '#00000099' }}>
+                        <View className="bg-white w-full rounded-2xl p-6">
+                            <Text className="text-xl font-bold mb-4">Edit Diaper Log</Text>
+                            <Text className="text-sm text-gray-500 mb-1">Consistency</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-3"
+                                value={editingLog?.consistency}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) =>
+                                        prev ? { ...prev, consistency: text } : prev,
+                                    )
+                                }
+                            />
+                            <Text className="text-sm text-gray-500 mb-1">Amount</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-3"
+                                value={editingLog?.amount}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) =>
+                                        prev ? { ...prev, amount: text } : prev,
+                                    )
+                                }
+                            />
+                            <Text className="text-sm text-gray-500 mb-1">Note</Text>
+                            <TextInput
+                                className="border border-gray-300 rounded-xl px-3 py-2 mb-6"
+                                value={editingLog?.note || ''}
+                                onChangeText={(text) =>
+                                    setEditingLog((prev) =>
+                                        prev ? { ...prev, note: text } : prev,
+                                    )
+                                }
+                            />
+                            <View className="flex-row justify-end gap-3">
+                                <TouchableOpacity
+                                    className="bg-gray-200 rounded-full px-4 py-2"
+                                    onPress={() => setEditModalVisible(false)}
+                                >
+                                    <Text>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    className="bg-green-500 rounded-full px-4 py-2"
+                                    onPress={handleSaveEdit}
+                                >
+                                    <Text className="text-white">Save</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </Modal>
+        </View>
+    )
+}
+
+export default DiaperLogsView;

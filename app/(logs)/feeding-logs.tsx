@@ -24,6 +24,10 @@ const DiaperLogsView: React.FC = () => {
         fetchDiaperLogs()
     }, [])
 
+     /**
+     * Fetches diaper logs from Supabase for the active child.
+     * Handles child ID resolution and fetch errors.
+     */
     const fetchDiaperLogs = async () => {
         try {
             const {
@@ -39,7 +43,7 @@ const DiaperLogsView: React.FC = () => {
                           'Failed to get active child ID',
                 )
             }
-
+            // Query diaper logs from Supabase and sort by most recent change time
             const { data, error } = await supabase
                 .from('diaper_logs')
                 .select('id, consistency, amount, change_time, note, logged_at')
@@ -59,6 +63,10 @@ const DiaperLogsView: React.FC = () => {
         }
     }
 
+    /**
+     * Renders a single diaper log entry in the list.
+     * Conditionally includes consistency, amount, and note if available.
+     */
     const renderDiaperLogItem = ({ item }: { item: DiaperLog }) => (
         <View style={styles.logItem}>
             <Text style={styles.dateText}>

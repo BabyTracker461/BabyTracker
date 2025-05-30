@@ -14,9 +14,18 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Button from '@/components/button'
 import { StatusBar } from 'expo-status-bar'
 
+/**
+ * Profile Screen
+ * Displays current user profile details (e.g., name, email, active child) using session context from Supabase.
+ * Users can view but not yet edit their account details. A "Sign Out" button allows users to log out.
+ * Some options like changing email or password and managing caretakers are shown as placeholders with alerts.
+ */
+
+
 export default function Profile() {
     const { session } = useAuth()
-
+    
+    // Handles user sign-out and route reset
     const handleSignOut = async () => {
         const { error } = await signOut()
         if (error) {

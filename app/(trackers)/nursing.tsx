@@ -13,6 +13,7 @@ import supabase from '@/library/supabase-client'
 import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import NursingStopwatch from '@/components/nursing-stopwatch'
+import { encryptData } from '@/library/crypto'
 
 export default function Nursing() {
     const insets = useSafeAreaInsets()
@@ -31,23 +32,34 @@ export default function Nursing() {
         rightAmount: string,
         note = '',
     ) => {
-        const { data, error } = await supabase.from('nursing_logs').insert([
-            {
-                child_id: childId,
-                left_duration: leftDuration,
-                right_duration: rightDuration,
-                left_amount: leftAmount,
-                right_amount: rightAmount,
-                note: note,
-            },
-        ])
+        try {
+            const encryptedLeftDuration = await encryptData(leftDuration)
+            const encryptedRightDuration = await encryptData(rightDuration)
+            const encryptedLeftAmount = await encryptData(leftAmount)
+            const encryptedRightAmount = await encryptData(rightAmount)
+            const encryptedNote = note ? await encryptData(note) : null
 
-        if (error) {
-            console.error('Error creating nursing log:', error)
-            return { success: false, error }
+            const { data, error } = await supabase.from('nursing_logs').insert([
+                {
+                    child_id: childId,
+                    left_duration: encryptedLeftDuration,
+                    right_duration: encryptedRightDuration,
+                    left_amount: encryptedLeftAmount,
+                    right_amount: encryptedRightAmount,
+                    note: encryptedNote,
+                },
+            ])
+
+            if (error) {
+                console.error('Error creating nursing log:', error)
+                return { success: false, error }
+            }
+
+            return { success: true, data }
+        } catch (err) {
+            console.error('❌ Encryption failed:', err)
+            return { success: false, error: 'Encryption error' }
         }
-
-        return { success: true, data }
     }
 
     const saveNursingLog = async () => {

@@ -13,6 +13,7 @@ import supabase from '@/library/supabase-client'
 import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import FeedingCategory from '@/components/feeding-category'
+import { encryptData } from '@/library/crypto'  // ✅ Added
 
 // Feeding.tsx
 // Screen for logging baby feeding sessions — includes category, item name, amount, feeding time, optional notes, and save logic
@@ -35,23 +36,34 @@ export default function Feeding() {
         feedingTime: Date,
         note = '',
     ) => {
-        const { data, error } = await supabase.from('feeding_logs').insert([
-            {
-                child_id: childId,
-                category,
-                item_name: itemName,
-                amount,
-                feeding_time: feedingTime.toISOString(),
-                note,
-            },
-        ])
+        try {
+            // ✅ Encrypt before inserting
+            const encryptedCategory = await encryptData(category)
+            const encryptedItemName = await encryptData(itemName)
+            const encryptedAmount = await encryptData(amount)
+            const encryptedNote = note ? await encryptData(note) : null
 
-        if (error) {
-            console.error('Error creating feeding log:', error)
-            return { success: false, error }
+            const { data, error } = await supabase.from('feeding_logs').insert([
+                {
+                    child_id: childId,
+                    category: encryptedCategory,
+                    item_name: encryptedItemName,
+                    amount: encryptedAmount,
+                    feeding_time: feedingTime.toISOString(),
+                    note: encryptedNote,
+                },
+            ])
+
+            if (error) {
+                console.error('Error creating feeding log:', error)
+                return { success: false, error }
+            }
+
+            return { success: true, data }
+        } catch (err) {
+            console.error('❌ Encryption or insert failed:', err)
+            return { success: false, error: 'Encryption or database error' }
         }
-
-        return { success: true, data }
     }
 
     // Fetch active child ID and save feeding log for that child
@@ -115,7 +127,6 @@ export default function Feeding() {
                         </View>
                         <View className='p-4 pt-9 bg-white rounded-xl z-0'>
                             <TextInput
-                                className=''
                                 placeholderTextColor={'#aaa'}
                                 placeholder='i.e. does not like pureed carrots'
                                 multiline={true}

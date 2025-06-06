@@ -13,6 +13,7 @@ import supabase from '@/library/supabase-client'
 import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import DiaperModule from '@/components/diaper-module'
+import { encryptData } from '@/library/crypto'
 
 // Diaper.tsx
 // Screen for logging diaper changes — includes selecting consistency, amount, change time, notes, and save logic
@@ -33,22 +34,31 @@ export default function Diaper() {
         changeTime: Date,
         note = '',
     ) => {
-        const { data, error } = await supabase.from('diaper_logs').insert([
-            {
-                child_id: childId,
-                consistency,
-                amount,
-                change_time: changeTime.toISOString(),
-                note,
-            },
-        ])
+        try {
+            const encryptedConsistency = await encryptData(consistency)
+            const encryptedAmount = await encryptData(amount)
+            const encryptedNote = note ? await encryptData(note) : null
 
-        if (error) {
-            console.error('Error creating diaper log:', error)
-            return { success: false, error }
+            const { data, error } = await supabase.from('diaper_logs').insert([
+                {
+                    child_id: childId,
+                    consistency: encryptedConsistency,
+                    amount: encryptedAmount,
+                    change_time: changeTime.toISOString(),
+                    note: encryptedNote,
+                },
+            ])
+
+            if (error) {
+                console.error('Error creating diaper log:', error)
+                return { success: false, error }
+            }
+
+            return { success: true, data }
+        } catch (err) {
+            console.error('❌ Encryption or insert failed:', err)
+            return { success: false, error: 'Encryption or database error' }
         }
-
-        return { success: true, data }
     }
 
     // Get active child ID and save diaper log

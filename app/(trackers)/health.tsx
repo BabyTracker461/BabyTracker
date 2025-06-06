@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { encryptData } from "@/library/crypto";
 
 // Define the shape of the health log data object with optional nested properties
 interface HealthLog {
@@ -101,30 +102,49 @@ export default function Health() {
       return;
     }
 
-    
+
     // Prepare data shape for insertion matching DB schemas
-    const logData = {
-      child_id: childId,
-      category: healthLog.category,
-      date: healthLog.date,
-      growth_length: healthLog.growth?.length || null,
-      growth_weight: healthLog.growth?.weight || null,
-      growth_head: healthLog.growth?.head || null,
-      activity_type: healthLog.activity?.type || null,
-      activity_duration: healthLog.activity?.duration || null,
-      meds_name: healthLog.meds?.name || null,
-      meds_amount: healthLog.meds?.amount || null,
-      meds_time_taken: healthLog.meds?.timeTaken || null,
-      note: healthLog.note,
-    };
+    try {
+      const encryptedLog = {
+        child_id: childId,
+        category: healthLog.category,
+        date: healthLog.date,
+        growth_length: healthLog.growth?.length
+          ? await encryptData(healthLog.growth.length)
+          : null,
+        growth_weight: healthLog.growth?.weight
+          ? await encryptData(healthLog.growth.weight)
+          : null,
+        growth_head: healthLog.growth?.head
+          ? await encryptData(healthLog.growth.head)
+          : null,
+        activity_type: healthLog.activity?.type
+          ? await encryptData(healthLog.activity.type)
+          : null,
+        activity_duration: healthLog.activity?.duration
+          ? await encryptData(healthLog.activity.duration)
+          : null,
+        meds_name: healthLog.meds?.name
+          ? await encryptData(healthLog.meds.name)
+          : null,
+        meds_amount: healthLog.meds?.amount
+          ? await encryptData(healthLog.meds.amount)
+          : null,
+        meds_time_taken: healthLog.meds?.timeTaken || null,
+        note: healthLog.note ? await encryptData(healthLog.note) : null,
+      };
 
-    const result = await createHealthLog(logData);
+      const result = await createHealthLog(encryptedLog);
 
-    if (result.success) {
-      router.replace("/(tabs)");
-      Alert.alert("Success", "Health log saved successfully!");
-    } else {
-      Alert.alert("Error", `Failed to save health log: ${result.error}`);
+      if (result.success) {
+        router.replace("/(tabs)");
+        Alert.alert("Success", "Health log saved successfully!");
+      } else {
+        Alert.alert("Error", `Failed to save health log: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("❌ Encryption failed:", err);
+      Alert.alert("Error", "Failed to encrypt and save health log.");
     }
   };
 

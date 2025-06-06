@@ -249,7 +249,6 @@ Client-side interactions with these APIs are typically handled via the Supabase 
 |                                 |
 | +-----------------------------+ |
 | | Studio (UI for DB)          | |
-| | (Likely separate local port)  | |
 | +-----------------------------+ |
 |                                 |
 +---------------------------------+

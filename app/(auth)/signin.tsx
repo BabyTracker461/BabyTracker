@@ -14,6 +14,13 @@ import Button from '@/components/button'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/library/auth-provider'
 
+/**
+ * SignInScreen.tsx
+ * A user login screen for the app. Includes email and password input,
+ * with secure password toggle, error handling, and navigation to sign up or guest access.
+ */
+
+
 export default function SignInScreen() {
     const [email, setEmail] = React.useState('')
     const [password, setPassword] = React.useState('')
@@ -29,6 +36,7 @@ export default function SignInScreen() {
         router.push('/(auth)/guest')
     }
 
+      // Attempt to sign in the user using provided credentials
     const handleSignIn = async () => {
         setLoading(true)
         const response = await signIn(email, password)

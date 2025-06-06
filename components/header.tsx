@@ -2,6 +2,13 @@ import { View, Text, TouchableOpacity, DimensionValue } from 'react-native'
 import React from 'react'
 import { Href, router } from 'expo-router'
 
+/**
+ * Header component displays a title and an optional navigation link with an icon.
+ * Accepts dynamic padding for top inset to account for device safe area.
+ * Uses Tailwind for styling and supports dark/light mode themes.
+ * Navigates to the given route when the link button is pressed.
+ */
+
 export interface HeaderLink {
     icon: string
     title: string

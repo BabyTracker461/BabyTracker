@@ -11,6 +11,13 @@ import {
   View,
 } from "react-native";
 
+/**
+ * HealthModule component lets users select a health category (Growth, Activity, Meds),
+ * enter relevant details, and pick date and time for entries.
+ * Supports iOS inline spinner pickers and Android native dialogs for date and time.
+ * Calls provided callbacks when date, category, or input data changes.
+ */
+
 export type HealthCategory = "Growth" | "Activity" | "Meds";
 
 interface HealthModuleProps {

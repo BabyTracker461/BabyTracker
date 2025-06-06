@@ -2,6 +2,8 @@ import { router, Stack } from 'expo-router'
 import React from 'react'
 import { TouchableOpacity, Text, useColorScheme } from 'react-native'
 
+// TrackersLayout.tsx
+// Layout screen for baby trackers stack — handles common header styling and back button
 export default function TrackersLayout() {
     const theme = useColorScheme()
 
@@ -14,6 +16,7 @@ export default function TrackersLayout() {
     }
 
     return (
+        // Stack navigator with common header options and screens
         <Stack
             screenOptions={{
                 headerShown: true,
@@ -34,6 +37,7 @@ export default function TrackersLayout() {
                 ),
             }}
         >
+            {/* Screens in the trackers stack */}
             <Stack.Screen name='sleep' options={{ title: 'Sleep Tracker' }} />
             <Stack.Screen name='diaper' options={{ title: 'Diaper Tracker' }} />
             <Stack.Screen name='health' options={{ title: 'Health Tracker' }} />

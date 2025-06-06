@@ -1,6 +1,12 @@
 import { ExternalPathString, router } from 'expo-router'
 import { TouchableOpacity, Text } from 'react-native'
 
+/**
+ * TrackerButton component renders a stylized button with an icon and label.
+ * Navigates to the specified external path when pressed using expo-router.
+ * Designed for consistent use across tracker-related UI elements.
+ */
+
 type Button = {
     label: string
     icon: string

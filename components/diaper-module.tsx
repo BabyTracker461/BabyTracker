@@ -5,6 +5,14 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 
+/**
+ * DiaperModule component allows users to select diaper consistency and amount,
+ * and manually pick a time for the diaper event.
+ * Supports iOS inline spinner picker and Android native time picker dialog.
+ * Calls corresponding callbacks whenever diaper time, consistency,
+ * or amount updates.
+ */
+
 type DiaperConsistency = 'Wet' | 'Dry' | 'Mixed'
 type DiaperAmount = 'SM' | 'MD' | 'LG'
 
@@ -41,6 +49,7 @@ export default function DiaperModule({
         }
     }
 
+     // Show the time picker: inline spinner for iOS or native dialog for Android
     const showTimePicker = () => {
         if (showIOSPicker) {
             return setShowIOSPicker(false)

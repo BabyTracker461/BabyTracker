@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 
+/**
+ * A double side nursing stopwatch that tracks elapsed time separately for the left and right sides. 
+ * Users can toggle between sides and control the timers independently.
+ * Time updates are passed to parent via callbacks.
+ */
+
 export default function NursingStopwatch({
     onTimeUpdateLeft,
     onTimeUpdateRight,
@@ -13,6 +19,7 @@ export default function NursingStopwatch({
     const leftIntervalRef = useRef<any>(null)
     const rightIntervalRef = useRef<any>(null)
 
+     // Start/stop the left timer
     useEffect(() => {
         if (leftRunning) {
             leftIntervalRef.current = setInterval(() => {
@@ -24,6 +31,7 @@ export default function NursingStopwatch({
         return () => clearInterval(leftIntervalRef.current)
     }, [leftRunning])
 
+    // Start/stop the right timer
     useEffect(() => {
         if (rightRunning) {
             rightIntervalRef.current = setInterval(() => {
@@ -43,6 +51,7 @@ export default function NursingStopwatch({
         onTimeUpdateRight?.(formatElapsedTime(rightTime))
     }, [rightTime, onTimeUpdateRight])
 
+    // Resets the currently active side
     const reset = () => {
         if (activeSide === 'left') {
             setLeftTime(0)
@@ -71,6 +80,7 @@ export default function NursingStopwatch({
         }
     }
 
+     // Render the elapsed time for the active side
     const activeTime = activeSide === 'left' ? leftTime : rightTime
 
     return (

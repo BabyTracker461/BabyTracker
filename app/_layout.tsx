@@ -7,6 +7,9 @@ import {
   ReanimatedLogLevel,
 } from "react-native-reanimated";
 
+// RootLayout.tsx
+// Root app layout wrapping authentication provider and main navigation stack — configures status bar and reanimated logging
+
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
@@ -21,11 +24,13 @@ export default function RootLayout() {
           navigationBarTranslucent: true,
         }}
       >
+         {/* Main app screens with headers hidden */}
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(trackers)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(logs)" options={{ headerShown: false }} />
 
+        {/* Modal presentation screen */}
         <Stack.Screen
           name="(modals)"
           options={{
@@ -33,6 +38,7 @@ export default function RootLayout() {
             presentation: "modal",
           }}
         />
+        {/* Authentication flow screens with header hidden */}
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
     </AuthProvider>

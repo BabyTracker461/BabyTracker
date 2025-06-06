@@ -14,6 +14,7 @@ import { router } from 'expo-router'
 import { getActiveChildId } from '@/library/utils'
 import FeedingCategory from '@/components/feeding-category'
 
+
 export default function Feeding() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)
@@ -22,7 +23,10 @@ export default function Feeding() {
     const [amount, setAmount] = useState('')
     const [feedingTime, setFeedingTime] = useState(new Date())
     const [note, setNote] = useState('')
-
+     /**
+     * Inserts a new feeding log into the 'feeding_logs' table on Supabase.
+     * Converts feedingTime to ISO string before sending.
+     */
     const createFeedingLog = async (
         childId: string,
         category: string,
@@ -50,6 +54,10 @@ export default function Feeding() {
         return { success: true, data }
     }
 
+    /**
+    * Gets the currently active child ID and attempts to save the feeding log.
+    * Returns success/error object for handling in UI.
+    */
     const saveFeedingLog = async () => {
         const { success, childId, error } = await getActiveChildId()
 
@@ -68,6 +76,10 @@ export default function Feeding() {
         )
     }
 
+     /**
+     * Validates inputs and attempts to save the feeding log.
+     * Navigates back to the main tab screen on success.
+     */
     const handleSaveFeedingLog = async () => {
         if (category && itemName && amount) {
             const result = await saveFeedingLog()
@@ -81,7 +93,7 @@ export default function Feeding() {
             Alert.alert('Please provide category, item name, and amount')
         }
     }
-
+     // Temporary useEffect to block this screen while it's still in development
     useEffect(() => {
         Alert.alert('Hey!', 'Feature coming soon', [
             { text: 'OK', onPress: () => router.replace('/(tabs)') },

@@ -15,6 +15,9 @@ import { getActiveChildId } from '@/library/utils'
 import FeedingCategory from '@/components/feeding-category'
 import { encryptData } from '@/library/crypto'  // ✅ Added
 
+// Feeding.tsx
+// Screen for logging baby feeding sessions — includes category, item name, amount, feeding time, optional notes, and save logic
+
 export default function Feeding() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)
@@ -24,6 +27,7 @@ export default function Feeding() {
     const [feedingTime, setFeedingTime] = useState(new Date())
     const [note, setNote] = useState('')
 
+    // Function to create a new feeding log record into Supabase
     const createFeedingLog = async (
         childId: string,
         category: string,
@@ -62,6 +66,7 @@ export default function Feeding() {
         }
     }
 
+    // Fetch active child ID and save feeding log for that child
     const saveFeedingLog = async () => {
         const { success, childId, error } = await getActiveChildId()
 
@@ -80,6 +85,7 @@ export default function Feeding() {
         )
     }
 
+    // Validate input fields and trigger save action
     const handleSaveFeedingLog = async () => {
         if (category && itemName && amount) {
             const result = await saveFeedingLog()
@@ -105,12 +111,14 @@ export default function Feeding() {
                         isTyping ? '-translate-y-[40%]' : 'translate-y-0'
                     }`}
                 >
+                    {/* FeedingCategory component handles category/item/amount/time inputs */}
                     <FeedingCategory
                         onCategoryUpdate={setCategory}
                         onItemNameUpdate={setItemName}
                         onAmountUpdate={setAmount}
                         onTimeUpdate={setFeedingTime}
                     />
+                    {/* Note input section */}
                     <View className='bottom-5'>
                         <View className='items-start top-5 left-3 z-10'>
                             <Text className='bg-gray-200 p-3 rounded-xl font'>
@@ -131,6 +139,7 @@ export default function Feeding() {
                         </View>
                     </View>
                 </View>
+                {/* Action buttons for saving and resetting form */}
                 <View className='flex-row gap-2'>
                     <TouchableOpacity
                         className='rounded-full p-4 bg-red-100 grow'

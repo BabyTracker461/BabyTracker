@@ -39,6 +39,10 @@ const FeedingLogsView: React.FC = () => {
         fetchFeedingLogs()
     }, [])
 
+     /**
+     * Fetches feeding logs from Supabase for the active child.
+     * Handles child ID resolution and fetch errors.
+     */
     const fetchFeedingLogs = async () => {
         try {
             const { success, childId, error: childError } = await getActiveChildId()
@@ -49,7 +53,7 @@ const FeedingLogsView: React.FC = () => {
                         : childError?.message || 'Failed to get active child ID'
                 )
             }
-
+            // Query diaper logs from Supabase and sort by most recent change time
             const { data, error } = await supabase
                 .from('feeding_logs')
                 .select('*')
@@ -139,6 +143,10 @@ const FeedingLogsView: React.FC = () => {
         }
     }
 
+    /**
+     * Renders a single feeding log entry in the list.
+     * Conditionally includes consistency, amount, and note if available.
+     */
     const renderFeedingLogItem = ({ item }: { item: FeedingLog }) => (
         <View className="bg-white rounded-xl p-4 mb-4 shadow">
             <Text className="text-lg font-bold mb-2">

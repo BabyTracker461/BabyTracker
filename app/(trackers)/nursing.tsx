@@ -15,6 +15,9 @@ import { getActiveChildId } from '@/library/utils'
 import NursingStopwatch from '@/components/nursing-stopwatch'
 import { encryptData } from '@/library/crypto'
 
+// nursing.tsx
+// Screen for logging breastfeeding sessions — includes stopwatch, volume input, and notes
+
 export default function Nursing() {
     const insets = useSafeAreaInsets()
     const [isTyping, setIsTyping] = useState(false)
@@ -24,6 +27,7 @@ export default function Nursing() {
     const [rightAmount, setRightAmount] = useState('')
     const [note, setNote] = useState('')
 
+    // Insert a new nursing log entry into Supabase
     const createNursingLog = async (
         childId: string,
         leftDuration: string,
@@ -61,7 +65,8 @@ export default function Nursing() {
             return { success: false, error: 'Encryption error' }
         }
     }
-
+    
+    // Retrieve the current active child, then save log to Supabase
     const saveNursingLog = async () => {
         const { success, childId, error } = await getActiveChildId()
 
@@ -80,7 +85,9 @@ export default function Nursing() {
         )
     }
 
+     // Validate input, then call save
     const handleSaveNursingLog = async () => {
+        // Prevent logging if all fields are empty
         if (
             leftDuration !== '00:00:00' ||
             rightDuration !== '00:00:00' ||
@@ -110,10 +117,12 @@ export default function Nursing() {
                         isTyping ? '-translate-y-[40%]' : 'translate-y-0'
                     }`}
                 >
+                    {/* Stopwatch component controls left/right timer states */}
                     <NursingStopwatch
                         onTimeUpdateLeft={setLeftDuration}
                         onTimeUpdateRight={setRightDuration}
                     />
+                    {/* Volume Input Section */}
                     <View className='stopwatch-primary'>
                         <View className='items-start bottom-5 left-3'>
                             <Text className='bg-gray-200 p-3 rounded-xl font'>
@@ -121,6 +130,7 @@ export default function Nursing() {
                             </Text>
                         </View>
                         <View className='flex-row mb-6'>
+                            {/* Left Amount Input */}
                             <View className='ml-4 mr-2 grow'>
                                 <Text className='feeding-module-label'>
                                     Left Amount
@@ -136,6 +146,7 @@ export default function Nursing() {
                                     onBlur={() => setIsTyping(false)}
                                 />
                             </View>
+                            {/* Right Amount Input */}
                             <View className='ml-2 mr-4 grow'>
                                 <Text className='feeding-module-label'>
                                     Right Amount
@@ -153,6 +164,7 @@ export default function Nursing() {
                             </View>
                         </View>
                     </View>
+                    {/* Note Input Section */}
                     <View className='bottom-5'>
                         <View className='items-start top-5 left-3 z-10'>
                             <Text className='bg-gray-200 p-3 rounded-xl font'>
@@ -174,6 +186,7 @@ export default function Nursing() {
                         </View>
                     </View>
                 </View>
+                {/* Bottom Buttons */}
                 <View className='flex-row gap-2'>
                     <TouchableOpacity
                         className='rounded-full p-4 bg-red-100 grow'

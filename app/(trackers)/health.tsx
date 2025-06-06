@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { encryptData } from "@/library/crypto";
 
+// Define the shape of the health log data object with optional nested properties
 interface HealthLog {
   child_id: string;
   category: HealthCategory;
@@ -47,6 +48,7 @@ export default function Health() {
     note: "",
   });
 
+    // Create a new health log entry into the database using Supabase client
   const createHealthLog = async (log: any) => {
     const { data, error } = await supabase.from("health_logs").insert([log]);
 
@@ -58,6 +60,7 @@ export default function Health() {
     return { success: true, data };
   };
 
+    // Validate input fields and save the health log entry
   const handleSaveHealthLog = async () => {
     if (!healthLog.category) {
       Alert.alert("Error", "Please provide a category");
@@ -99,6 +102,8 @@ export default function Health() {
       return;
     }
 
+
+    // Prepare data shape for insertion matching DB schemas
     try {
       const encryptedLog = {
         child_id: childId,
@@ -143,6 +148,7 @@ export default function Health() {
     }
   };
 
+    // Update date in state when changed
   const handleDateUpdate = (date: Date) => {
     setHealthLog((prev) => ({
       ...prev,
@@ -150,6 +156,7 @@ export default function Health() {
     }));
   };
 
+   // Update category and reset nested fields based on selected category
   const handleCategoryUpdate = (category: HealthCategory) => {
     setHealthLog((prev) => ({
       ...prev,
@@ -167,6 +174,7 @@ export default function Health() {
     }));
   };
 
+// Update growth-related fields in state with partial updates
   const handleGrowthUpdate = (growth: {
     length?: string;
     weight?: string;
@@ -196,7 +204,7 @@ export default function Health() {
       },
     }));
   };
-
+ // Update activity-related fields in state with partial updates
   const handleActivityUpdate = (activity: {
     type?: string;
     duration?: string;
@@ -220,6 +228,7 @@ export default function Health() {
     }));
   };
 
+  // Update medication-related fields in state with partial updates
   const handleMedsUpdate = (meds: {
     name?: string;
     amount?: string;
@@ -245,6 +254,7 @@ export default function Health() {
         style={{ paddingBottom: insets.bottom }}
       >
         <ScrollView>
+          {/* Render the health input form module with update handlers */}
           <HealthModule
             onDateUpdate={handleDateUpdate}
             onCategoryUpdate={handleCategoryUpdate}
@@ -252,6 +262,7 @@ export default function Health() {
             onActivityUpdate={handleActivityUpdate}
             onMedsUpdate={handleMedsUpdate}
           />
+           {/* Multiline input for additional notes */}
           <View className="bottom-5 pt-5">
             <View className="items-start top-5 left-3 z-10">
               <Text className="bg-gray-200 p-3 rounded-xl font">
@@ -284,6 +295,7 @@ export default function Health() {
             </View>
           </View>
         </ScrollView>
+        {/* Action buttons to save or reset form */}
         <View className="flex-row gap-2">
           <TouchableOpacity
             className="rounded-full p-4 bg-red-100 grow"

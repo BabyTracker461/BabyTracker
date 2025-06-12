@@ -1,7 +1,5 @@
 <a id="readme-top"></a>
 
-# Simple Baby
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
@@ -14,12 +12,14 @@
 [![React Native][React-Native.dev]][React-Native-url]
 [![Expo][Expo.dev]][expo-url]
 [![Supabase][Supabase.io]][Supabase-url]
+[![NativeWind][NativeWind.dev]][NativeWind-url]
 [![Android][Android.com]][Android-url]
 [![IOS][Apple.com]][Apple-url]
+[![License][license-shield]][license-url]
 
-## Project Overview and Purpose
+# Simple Baby
 
-The Baby Tracker project is a mobile application designed to help parents and caretakers log and monitor various aspects of a baby's daily activities and development. This includes tracking feeding times, sleep patterns, diaper changes, and developmental milestones. The purpose is to provide a convenient and centralized way to keep records, observe trends, and share information with other caregivers or healthcare providers.
+Simple Baby is a mobile application designed to help parents and caretakers log and monitor various aspects of a baby's daily activities and development. This includes tracking feeding times, sleep patterns, diaper changes, and developmental milestones. The purpose is to provide a convenient and centralized way to keep records, observe trends, and share information with other caregivers or healthcare providers. 
 
 ## Complete Setup Instructions
 
@@ -353,3 +353,5 @@ The following are missing features or known issues, both big and small, that wou
 [Apple-url]: https://apple.com
 [Supabase.io]: https://img.shields.io/badge/supabase-%234A154B.svg?style=for-the-badge&logo=supabase&logoColor=white
 [Supabase-url]: https://supabase.io
+[NativeWind.dev]: https://img.shields.io/badge/nativewind-000000?style=for-the-badge&logo=nativewind&logoColor=white
+[NativeWind-url]: https://www.nativewind.dev/

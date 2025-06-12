@@ -12,8 +12,8 @@
 
 [![TypeScript][TypeScript.org]][TypeScript-url]
 [![React Native][React-Native.dev]][React-Native-url]
-[![Supabase][Supabase.io]][Supabase-url]
 [![Expo][Expo.dev]][expo-url]
+[![Supabase][Supabase.io]][Supabase-url]
 [![Android][Android.com]][Android-url]
 [![IOS][Apple.com]][Apple-url]
 
@@ -335,3 +335,21 @@ The following are missing features or known issues, both big and small, that wou
 - Sonny Box
 - Bryant Shitabata
 - Yahir Gonzalez
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
+[license-shield]: https://img.shields.io/github/license/adulbrich/simplebaby.svg?style=for-the-badge
+[license-url]: https://github.com/adulbrich/simplebaby/blob/master/LICENSE
+[Expo.dev]: https://img.shields.io/badge/expo-1C1E24?style=for-the-badge&logo=expo&logoColor=#D04A37
+[Expo-url]: https://expo.dev
+[React-Native.dev]: https://img.shields.io/badge/react_native-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB
+[React-Native-url]: https://reactnative.dev
+[TypeScript.org]: https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white
+[TypeScript-url]: https://typescriptlang.org
+[Android.com]: https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white
+[Android-url]: https://android.com
+[Apple.com]: https://img.shields.io/badge/IOS-%23000000.svg?style=for-the-badge&logo=apple&logoColor=white
+[Apple-url]: https://apple.com
+[Supabase.io]: https://img.shields.io/badge/supabase-%234A154B.svg?style=for-the-badge&logo=supabase&logoColor=white
+[Supabase-url]: https://supabase.io
